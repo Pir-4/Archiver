@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.IO.Compression;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VeeamSoftware_test.Gzip;
 
@@ -21,8 +22,16 @@ namespace UnitTest
         }
         private void CompressDirectory(string input,string output)
         {
-            IGzipDriver driver = new GzipDriverDirectory();
-            driver.Compress(input, output);
+            string[] sFiles = Directory.GetFiles(input, "*.*", SearchOption.AllDirectories);
+            int iDirLen = input[input.Length - 1] == Path.DirectorySeparatorChar ? input.Length : input.Length + 1;
+
+            using (FileStream outFile = new FileStream(output, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (GZipStream str = new GZipStream(outFile, CompressionMode.Compress))
+                foreach (string sFilePath in sFiles)
+                {
+                    string sRelativePath = sFilePath.Substring(iDirLen);
+                    GzipDriver.CompressFile(input, sRelativePath, str);
+                }
         }
         [TestMethod]
         public void CompressFile()
@@ -35,8 +44,12 @@ namespace UnitTest
         }
         private void CompressFile(string input, string output)
         {
-            IGzipDriver driver = new GzipDriverDirectory();
-            driver.Compress(input, output);
+            using (FileStream outFile = new FileStream(output, FileMode.Create, FileAccess.Write, FileShare.None))
+            using (GZipStream str = new GZipStream(outFile, CompressionMode.Compress))
+            {
+                string sRelativePath = Path.GetFileName(input);
+                GzipDriver.CompressFile(Path.GetDirectoryName(input), sRelativePath, str);
+            }
         }
 
         [TestMethod]
@@ -48,13 +61,19 @@ namespace UnitTest
             string input = @"E:\education\programs\test.gzip";
 
             CompressDirectory(input_1, input);
-            IGzipDriver driver = new GzipDriverDirectory();
-            driver.Decompress(input, output);
+            Decompress(input, output);
 
             Assert.IsTrue(Directory.Exists(output));
 
             Directory.Delete(output,true);
             File.Delete(input);
+        }
+
+        public void Decompress(string input, string output)
+        {
+            using (FileStream inFile = new FileStream(input, FileMode.Open, FileAccess.Read, FileShare.None))
+            using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
+                while (GzipDriver.DecompressFile(output, zipStream)) ;
         }
         [TestMethod]
         public void DecompressToFile()
@@ -65,24 +84,12 @@ namespace UnitTest
             string input = @"E:\education\programs\test.gzip";
 
             CompressFile(input_1, input);
-
-            IGzipDriver driver = new GzipDriverDirectory();
-            driver.Decompress(input, output);
+            Decompress(input, output);
 
             Assert.IsTrue(Directory.Exists(output));
 
             Directory.Delete(output, true);
             File.Delete(input);
-        }
-
-        [TestMethod]
-        public void CreateDriver()
-        {
-            string input_dir = @"E:\education\programs\test";
-            string input_file = @"E:\education\programs\test\test.txt";
-
-            Assert.IsTrue(GzipDriver.create(input_dir) is GzipDriverDirectory);
-            Assert.IsTrue(GzipDriver.create(input_file) is GzipDriverFile);
         }
     }
 }

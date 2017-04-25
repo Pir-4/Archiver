@@ -9,22 +9,9 @@ using System.Runtime.Remoting.Messaging;
 
 namespace VeeamSoftware_test.Gzip
 {
-    public interface IGzipDriver
-    {
-        void Compress(string sInDir, string sOutFile);
-        void Decompress(string sCompressedFile, string sDir);
-    }
-    public abstract class GzipDriver : IGzipDriver
-    {
-        public static IGzipDriver create(string pathToFileOrDirecoty)
-        {
-            if (File.Exists(pathToFileOrDirecoty))
-                return new GzipDriverFile();
 
-             return new GzipDriverDirectory();
-        }
-        public abstract void Compress(string sInDir, string sOutFile);
-
+    public  static class GzipDriver
+    {
         public static void CompressFile(string sDir, string sRelativePath, GZipStream zipStream)
         {
 
@@ -87,52 +74,6 @@ namespace VeeamSoftware_test.Gzip
                 sb.Append(c);
             }
             return sb.ToString();
-        }
-
-        protected static void CompressDirectory(string sInDir, string sOutFile)
-        {
-            string[] sFiles = Directory.GetFiles(sInDir, "*.*", SearchOption.AllDirectories);
-            int iDirLen = sInDir[sInDir.Length - 1] == Path.DirectorySeparatorChar ? sInDir.Length : sInDir.Length + 1;
-
-            using (FileStream outFile = new FileStream(sOutFile, FileMode.Create, FileAccess.Write, FileShare.None))
-            using (GZipStream str = new GZipStream(outFile, CompressionMode.Compress))
-                foreach (string sFilePath in sFiles)
-                {
-                    string sRelativePath = sFilePath.Substring(iDirLen);
-                    CompressFile(sInDir, sRelativePath, str);
-                }
-        }
-        protected static void CompressFile(string sInFile, string sOutFile)
-        {
-            using (FileStream outFile = new FileStream(sOutFile, FileMode.Create, FileAccess.Write, FileShare.None))
-            using (GZipStream str = new GZipStream(outFile, CompressionMode.Compress))
-            {
-                string sRelativePath = Path.GetFileName(sInFile);
-                CompressFile(Path.GetDirectoryName(sInFile), sRelativePath, str);
-            }
-        }
-
-
-        public void Decompress(string sCompressedFile, string sDir)
-        {
-            using (FileStream inFile = new FileStream(sCompressedFile, FileMode.Open, FileAccess.Read, FileShare.None))
-            using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
-                while (DecompressFile(sDir, zipStream)) ;
-        }
-    }
-
-    public class GzipDriverFile : GzipDriver
-    {
-        public override void Compress(string sInDir, string sOutFile)
-        {
-            CompressFile(sInDir, sOutFile);
-        }
-    }
-    public class GzipDriverDirectory : GzipDriver
-    {
-        public override void Compress(string sInDir, string sOutFile)
-        {
-            CompressDirectory(sInDir, sOutFile);
         }
     }
 }
