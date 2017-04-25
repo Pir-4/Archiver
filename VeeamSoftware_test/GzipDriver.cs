@@ -25,7 +25,7 @@ namespace VeeamSoftware_test.Gzip
         }
         public abstract void Compress(string sInDir, string sOutFile);
 
-        private static void CompressFile(string sDir, string sRelativePath, GZipStream zipStream)
+        public static void CompressFile(string sDir, string sRelativePath, GZipStream zipStream)
         {
 
             CompresFileName(sRelativePath, zipStream);
@@ -44,7 +44,7 @@ namespace VeeamSoftware_test.Gzip
                 zipStream.Write(BitConverter.GetBytes(c), 0, sizeof(char));
         }
 
-        private static bool DecompressFile(string sDir, GZipStream zipStream)
+        public static bool DecompressFile(string sDir, GZipStream zipStream)
         {
             string sFileName = DecompressFileName(zipStream);
             if (sFileName == null)
@@ -111,6 +111,7 @@ namespace VeeamSoftware_test.Gzip
                 CompressFile(Path.GetDirectoryName(sInFile), sRelativePath, str);
             }
         }
+
 
         public void Decompress(string sCompressedFile, string sDir)
         {
