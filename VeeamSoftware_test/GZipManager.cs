@@ -13,14 +13,24 @@ namespace VeeamSoftware_test.Gzip
 
     class GZipManager : IGZipManager
     {
+        private IGzipDriver driver;
+
         public int Compress(string input, string output)
         {
+            Driver(input).Compress(input,  output);
             return 0;
         }
 
         public int Decompress(string input, string output)
         {
+            Driver(input).Decompress(input, output);
             return 0;
+        }
+
+        private IGzipDriver Driver (string path)
+        {
+            driver = driver == null? driver = GzipDriver.create(path) : driver;
+            return driver;
         }
     }
 }

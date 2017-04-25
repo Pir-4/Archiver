@@ -16,7 +16,7 @@ namespace VeeamSoftware_test.Gzip
     }
     public abstract class GzipDriver : IGzipDriver
     {
-        public IGzipDriver create(string pathToFileOrDirecoty)
+        public static IGzipDriver create(string pathToFileOrDirecoty)
         {
             if (File.Exists(pathToFileOrDirecoty))
                 return new GzipDriverFile();
