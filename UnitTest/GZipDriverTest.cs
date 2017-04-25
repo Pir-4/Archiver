@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using VeeamSoftware_test;
+using VeeamSoftware_test.Gzip;
 
 namespace UnitTest
 {
@@ -21,7 +21,8 @@ namespace UnitTest
         }
         private void CompressDirectory(string input,string output)
         {
-            GzipDriver.CompressDirectory(input, output);
+            IGzipDriver driver = new GzipDriverDirectory();
+            driver.Compress(input, output);
         }
         [TestMethod]
         public void CompressFile()
@@ -34,7 +35,8 @@ namespace UnitTest
         }
         private void CompressFile(string input, string output)
         {
-            GzipDriver.CompressFile(input, output);
+            IGzipDriver driver = new GzipDriverDirectory();
+            driver.Compress(input, output);
         }
 
         [TestMethod]
@@ -46,7 +48,8 @@ namespace UnitTest
             string input = @"E:\education\programs\test.gzip";
 
             CompressDirectory(input_1, input);
-            GzipDriver.DecompressToDirectory(input, output);
+            IGzipDriver driver = new GzipDriverDirectory();
+            driver.Decompress(input, output);
 
             Assert.IsTrue(Directory.Exists(output));
 
@@ -62,7 +65,7 @@ namespace UnitTest
             string input = @"E:\education\programs\test.gzip";
 
             CompressFile(input_1, input);
-            GzipDriver.DecompressToDirectory(input, output);
+            GzipDriver.Decompress(input, output);
 
             Assert.IsTrue(Directory.Exists(output));
 

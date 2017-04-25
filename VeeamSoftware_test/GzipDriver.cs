@@ -1,4 +1,5 @@
 ﻿using System;
+using System.CodeDom;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,10 +7,24 @@ using System.Text;
 using System.IO.Compression;
 using System.Runtime.Remoting.Messaging;
 
-namespace VeeamSoftware_test
+namespace VeeamSoftware_test.Gzip
 {
-    public class GzipDriver
+    public interface IGzipDriver
     {
+        void Compress(string sInDir, string sOutFile);
+        void Decompress(string sCompressedFile, string sDir);
+    }
+    public abstract class GzipDriver : IGzipDriver
+    {
+        public IGzipDriver create(string pathToFileOrDirecoty)
+        {
+            if (File.Exists(pathToFileOrDirecoty))
+                return new GzipDriverFile();
+
+             return new GzipDriverDirectory();
+        }
+        public abstract void Compress(string sInDir, string sOutFile);
+
         private static void CompressFile(string sDir, string sRelativePath, GZipStream zipStream)
         {
 
@@ -20,7 +35,6 @@ namespace VeeamSoftware_test
             zipStream.Write(BitConverter.GetBytes(bytes.Length), 0, sizeof(int));
             zipStream.Write(bytes, 0, bytes.Length);
         }
-
         private static void CompresFileName(string sRelativePath, GZipStream zipStream)
         {
             //Compress file name
@@ -54,7 +68,6 @@ namespace VeeamSoftware_test
 
             return true;
         }
-
         private static string DecompressFileName(GZipStream zipStream)
         {
             //Decompress file name
@@ -75,7 +88,8 @@ namespace VeeamSoftware_test
             }
             return sb.ToString();
         }
-        public static void CompressDirectory(string sInDir, string sOutFile)
+
+        protected static void CompressDirectory(string sInDir, string sOutFile)
         {
             string[] sFiles = Directory.GetFiles(sInDir, "*.*", SearchOption.AllDirectories);
             int iDirLen = sInDir[sInDir.Length - 1] == Path.DirectorySeparatorChar ? sInDir.Length : sInDir.Length + 1;
@@ -88,8 +102,7 @@ namespace VeeamSoftware_test
                     CompressFile(sInDir, sRelativePath, str);
                 }
         }
-
-        public static void CompressFile(string sInFile, string sOutFile)
+        protected static void CompressFile(string sInFile, string sOutFile)
         {
             using (FileStream outFile = new FileStream(sOutFile, FileMode.Create, FileAccess.Write, FileShare.None))
             using (GZipStream str = new GZipStream(outFile, CompressionMode.Compress))
@@ -99,11 +112,26 @@ namespace VeeamSoftware_test
             }
         }
 
-        public static void DecompressToDirectory(string sCompressedFile, string sDir)
+        public void Decompress(string sCompressedFile, string sDir)
         {
             using (FileStream inFile = new FileStream(sCompressedFile, FileMode.Open, FileAccess.Read, FileShare.None))
             using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
                 while (DecompressFile(sDir, zipStream)) ;
+        }
+    }
+
+    public class GzipDriverFile : GzipDriver
+    {
+        public override void Compress(string sInDir, string sOutFile)
+        {
+            CompressFile(sInDir, sOutFile);
+        }
+    }
+    public class GzipDriverDirectory : GzipDriver
+    {
+        public override void Compress(string sInDir, string sOutFile)
+        {
+            CompressDirectory(sInDir, sOutFile);
         }
     }
 }

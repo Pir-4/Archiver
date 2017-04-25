@@ -49,7 +49,7 @@ namespace VeeamSoftware_test
                 if (bCompress)
                     GzipDriver.CompressDirectory(sDir, sCompressedFile);
                 else
-                    GzipDriver.DecompressToDirectory(sCompressedFile, sDir);
+                    GzipDriver.Decompress(sCompressedFile, sDir);
 
                 return 0;
             }
