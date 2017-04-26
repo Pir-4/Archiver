@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.IO;
 using System.IO.Compression;
+using System.Threading;
 
 namespace VeeamSoftware_test.Gzip
 {
@@ -23,6 +24,7 @@ namespace VeeamSoftware_test.Gzip
                 using (GZipStream gZipStream = new GZipStream(outFile, CompressionMode.Compress))
                 {
                     string dir = "";
+                    List<Thread> threads = new List<Thread>();
                     foreach (string sFilePath in getPathFiles(input, out dir))
                     {
                         GzipDriver.CompressFile(dir, sFilePath, gZipStream);
