@@ -10,7 +10,7 @@ using System.Runtime.Remoting.Messaging;
 namespace VeeamSoftware_test.Gzip
 {
 
-    public  static class GzipDriver
+    public static class GzipDriver
     {
         public static void CompressFile(string sDir, string sRelativePath, GZipStream zipStream)
         {
@@ -18,9 +18,41 @@ namespace VeeamSoftware_test.Gzip
             CompresFileName(sRelativePath, zipStream);
 
             //Compress file content
-            byte[] bytes = File.ReadAllBytes(Path.Combine(sDir, sRelativePath));
+            using (FileStream file = new FileStream(Path.Combine(sDir, sRelativePath), FileMode.Open, FileAccess.Read))
+            {
+                zipStream.Write(BitConverter.GetBytes(file.Length), 0, sizeof(int));
+
+                long numBytesToRead = (long) file.Length;
+                int numBytesRead = 0;
+                int size = numBytesToRead > Int32.MaxValue ?  Int32.MaxValue : (int)numBytesToRead;
+                try
+                {
+                    while (numBytesToRead > 0)
+                    {
+                        byte[] bytes = new byte[size];
+                        // Read may return anything from 0 to numBytesToRead.
+                        int n = file.Read(bytes, 0, size);
+
+                        // Break when the end of the file is reached.
+                        if (n == 0)
+                            break;
+
+                        zipStream.Write(bytes, 0, bytes.Length);
+                        numBytesRead += n;
+                        numBytesToRead -= n;
+                    }
+                }
+                catch (Exception e)
+                {
+                    
+                    throw e;
+                }
+                
+
+            }
+                /*byte[] bytes = File.ReadAllBytes(Path.Combine(sDir, sRelativePath));
             zipStream.Write(BitConverter.GetBytes(bytes.Length), 0, sizeof(int));
-            zipStream.Write(bytes, 0, bytes.Length);
+            zipStream.Write(bytes, 0, bytes.Length);*/
         }
         private static void CompresFileName(string sRelativePath, GZipStream zipStream)
         {

@@ -69,6 +69,16 @@ namespace UnitTest
 
             Directory.Delete(output, true);
             File.Delete(input);
+        }///E:\education\programs\Tonari no Totoro.mkv
+        [TestMethod]
+        public void CompressFatFile()
+        {
+            string input = @"E:\education\programs\TonarinoTotoro.mkv";
+            string output = @"E:\education\programs\test.gzip";
+            Compress(input, output);
+            Assert.IsTrue(File.Exists(output));
+            File.Delete(output);
         }
+
     }
 }
