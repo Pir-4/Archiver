@@ -13,6 +13,7 @@ namespace VeeamSoftware_test.Gzip
         void Execute();
         string SourceFile { get; set; }
         string ResultFile { get; set; }
+        string Act { get; }
     }
 
     public abstract class GZipManager : IGZipManager
@@ -44,6 +45,7 @@ namespace VeeamSoftware_test.Gzip
             get { return resultFile; }
             set { resultFile = value; }
         }
+        public abstract string Act { get; }
     }
 
     public class GZipManagerCompress : GZipManager
@@ -60,8 +62,10 @@ namespace VeeamSoftware_test.Gzip
                         }
                     }
                 }
-
-            
+        }
+        public override string Act
+        {
+            get { return Compress; } 
         }
     }
     public class GZipManagerDecompress : GZipManager
@@ -78,6 +82,10 @@ namespace VeeamSoftware_test.Gzip
                     }
                 }
             }
+        }
+        public override string Act
+        {
+            get { return Decompress; }
         }
     }
 }

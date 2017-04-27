@@ -4,6 +4,8 @@ using System.Globalization;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
 using VeeamSoftware_test.Gzip;
@@ -12,7 +14,33 @@ namespace VeeamSoftware_test
 {
     class Program
     {
-        delegate void ProgressDelegate(string sMessage);
+        public delegate bool HandlerRoutine(CtrlTypes CtrlType);
+
+        [DllImport("Kernel32")]
+        public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
+
+        private static readonly Mutex mutex = new Mutex(true, Assembly.GetExecutingAssembly().GetName().CodeBase);
+        private static bool _userRequestExit = false;
+        private static bool _doIStop = false;
+        static HandlerRoutine consoleHandler;
+
+        public enum CtrlTypes
+        {
+            CTRL_C_EVENT = 0,
+            CTRL_BREAK_EVENT,
+            CTRL_CLOSE_EVENT,
+            CTRL_LOGOFF_EVENT = 5,
+            CTRL_SHUTDOWN_EVENT
+        }
+        private static bool ConsoleCtrlCheck(CtrlTypes ctrlType)
+        {
+            if (ctrlType.Equals(CtrlTypes.CTRL_C_EVENT))
+            {
+                _userRequestExit = true;
+                throw new ApplicationException("Stop programm");
+            }
+            return true;
+        }
 
 
 
@@ -20,6 +48,12 @@ namespace VeeamSoftware_test
         {
             try
             {
+                if (!mutex.WaitOne(TimeSpan.Zero, true))
+                    throw new ApplicationException("Another instance already running");
+
+                consoleHandler = new HandlerRoutine(ConsoleCtrlCheck);
+                SetConsoleCtrlHandler(consoleHandler, true);
+
                 Work(argv);
             }
             catch (Exception e)
@@ -34,6 +68,10 @@ namespace VeeamSoftware_test
         private static void Work(string[] argv)
         {
             IGZipManager manager = ValidateArguments(argv);
+
+            Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion started", manager.Act));
+            manager.Execute();
+            Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion completed", manager.Act));
         }
 
         private static IGZipManager ValidateArguments(string[] argv)
@@ -55,6 +93,9 @@ namespace VeeamSoftware_test
 
             if(!File.Exists(argv[1]))
                 throw new ArgumentException("Please enter correct source file name.");
+
+            result.SourceFile = argv[1];
+            result.ResultFile = argv[2];
 
             return result;
 
