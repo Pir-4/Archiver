@@ -12,79 +12,58 @@ namespace UnitTest
     [TestClass]
     public class GZipManagerTest
     {
-        [TestMethod]
-        public void CompressDirectory()
-        {
-            string input = @"E:\education\programs\test";
-            string output = @"E:\education\programs\test.gzip";
-
-            IGZipManager zip =new GZipManagerCompress();
-            zip.Execute(input, output);
-
-            Assert.IsTrue(File.Exists(output));
-            //File.Delete(output);
-        }
-        /*private IGZipManager Compress(string input, string output)
-        {
-            IGZipManager manager = new GZipManager();
-            manager.Compress(input, output);
-
-            return manager;
-        }*/
-        /*[TestMethod]
-        public void CompressFile()
-        {
-            string input = @"E:\education\programs\test\test.txt";
-            string output = @"E:\education\programs\test.gzip";
-            Compress(input, output);
-            Assert.IsTrue(File.Exists(output));
-            File.Delete(output);
-        }*/
 
         [TestMethod]
-        public void DecompressToDirectory()
+        public void CompressFileAndDecompressToFile()
         {
-            string input_1 = @"E:\education\programs\test\";
+            string input_1 = @"E:\education\programs\test\testttt\dfdf.txt";
 
-            string output = @"E:\education\programs\test22";
+            string output = @"E:\education\programs\test22.txt";
             string input = @"E:\education\programs\test.gzip";
 
             IGZipManager zip = new GZipManagerCompress();
-            zip.Execute(input_1, input);
+            zip.SourceFile = input_1;
+            zip.ResultFile = input;
+            zip.Execute();
 
             zip = new GZipManagerDecompress();
-            zip.Execute(input, output);
+            zip.SourceFile = input;
+            zip.ResultFile = output;
+            zip.Execute();
 
-            //Assert.IsTrue(Directory.Exists(output));
+            FileInfo Etalon = new FileInfo(input_1);
+            FileInfo create = new FileInfo(output);
+            Assert.IsTrue( Etalon.Length == create.Length);
 
-            //Directory.Delete(output, true);
-           // File.Delete(input);
-        }
-        /*[TestMethod]
-        public void DecompressToFile()
-        {
-            string input_1 = @"E:\education\programs\test\test.txt";
-
-            string output = @"E:\education\programs\test2";
-            string input = @"E:\education\programs\test.gzip";
-
-            Compress(input_1, input).Decompress(input, output);
-
-            Assert.IsTrue(Directory.Exists(output));
-
-            Directory.Delete(output, true);
+            File.Delete(output);
             File.Delete(input);
         }
-        ///E:\education\programs\Tonari no Totoro.mkv
-        /*[TestMethod]
-        public void CompressFatFile()
+        [TestMethod]
+        public void CompressFileAndDecompressToFatFile()
         {
-            string input = @"E:\education\programs\TonarinoTotoro.mkv";
-            string output = @"E:\education\programs\test.gzip";
-            Compress(input, output);
-            Assert.IsTrue(File.Exists(output));
+            string input_1 = @"E:\education\programs\TonarinoTotoro.mkv";
+
+            string output = @"E:\education\programs\test22.txt";
+            string input = @"E:\education\programs\test.gzip";
+
+            IGZipManager zip = new GZipManagerCompress();
+            zip.SourceFile = input_1;
+            zip.ResultFile = input;
+            zip.Execute();
+
+            zip = new GZipManagerDecompress();
+            zip.SourceFile = input;
+            zip.ResultFile = output;
+            zip.Execute();
+
+            FileInfo Etalon = new FileInfo(input_1);
+            FileInfo create = new FileInfo(output);
+            Assert.IsTrue(Etalon.Length == create.Length);
+
             File.Delete(output);
-        }*/
+            File.Delete(input);
+        }
+
 
     }
 }

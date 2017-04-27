@@ -55,9 +55,9 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\VeeamSoftware_test\VeeamSoftware_test.csproj">
+    <ProjectReference Include="..\VeeamSoftware_test\GZipTest.csproj">
       <Project>{8e3c1c81-9e78-4dc4-bfe7-72bf2be99927}</Project>
-      <Name>VeeamSoftware_test</Name>
+      <Name>GZipTest</Name>
     </ProjectReference>
   </ItemGroup>
   <Choose>

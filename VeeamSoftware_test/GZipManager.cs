@@ -10,13 +10,18 @@ namespace VeeamSoftware_test.Gzip
 {
     public interface IGZipManager
     {
-        void Execute(string sourceFile, string resultFile);
+        void Execute();
+        string SourceFile { get; set; }
+        string ResultFile { get; set; }
     }
 
     public abstract class GZipManager : IGZipManager
     {
-        private const string Compress = "compress";
-        private const string Decompress = "decompress";
+        public const string Compress = "compress";
+        public const string Decompress = "decompress";
+
+        private string sourceFile;
+        private string resultFile;
 
         public static IGZipManager create(string act)
         {
@@ -29,16 +34,25 @@ namespace VeeamSoftware_test.Gzip
             return null;
         }
 
-        public abstract void Execute(string sourceFile, string resultFile);
+        public abstract void Execute();
+        public string SourceFile
+        {
+            get { return sourceFile; }
+            set { sourceFile = value; }
+        }
+        public string ResultFile {
+            get { return resultFile; }
+            set { resultFile = value; }
+        }
     }
 
     public class GZipManagerCompress : GZipManager
     {
-        public override void Execute(string sourceFile, string resultFile)
+        public override void Execute( )
         {
-                using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read))
+                using (var sourceStream = new FileStream(SourceFile, FileMode.Open, FileAccess.Read))
                 {
-                    using (var outStream = new FileStream(resultFile, FileMode.Create, FileAccess.Write))
+                    using (var outStream = new FileStream(ResultFile, FileMode.Create, FileAccess.Write))
                     {
                         using (var gZipStream = new GZipStream(outStream, CompressionMode.Compress))
                         {
@@ -52,13 +66,13 @@ namespace VeeamSoftware_test.Gzip
     }
     public class GZipManagerDecompress : GZipManager
     {
-        public override void Execute(string sourceFile, string resultFile)
+        public override void Execute()
         {
-            using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read))
+            using (var sourceStream = new FileStream(SourceFile, FileMode.Open, FileAccess.Read))
             {
                 using (var gZipStream = new GZipStream(sourceStream, CompressionMode.Decompress))
                 {
-                    using (var outStream = new FileStream(resultFile,FileMode.Create,FileAccess.Write))
+                    using (var outStream = new FileStream(ResultFile, FileMode.Create,FileAccess.Write))
                     {
                         GzipDriver.ModificationOfData(gZipStream, outStream);
                     }

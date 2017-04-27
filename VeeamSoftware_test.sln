@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 14
 VisualStudioVersion = 14.0.25123.0
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "VeeamSoftware_test", "VeeamSoftware_test\VeeamSoftware_test.csproj", "{8E3C1C81-9E78-4DC4-BFE7-72BF2BE99927}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "GZipTest", "VeeamSoftware_test\GZipTest.csproj", "{8E3C1C81-9E78-4DC4-BFE7-72BF2BE99927}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UnitTest", "UnitTest\UnitTest.csproj", "{08E089A4-39F6-4542-8A85-40AFB65E547E}"
 EndProject
