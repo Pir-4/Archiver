@@ -1,9 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Globalization;
 using System.IO;
-using System.IO.Compression;
-using System.Linq;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -20,25 +19,17 @@ namespace VeeamSoftware_test
         public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
 
         private static readonly Mutex mutex = new Mutex(true, Assembly.GetExecutingAssembly().GetName().CodeBase);
-        private static bool _userRequestExit = false;
-        private static bool _doIStop = false;
-        static HandlerRoutine consoleHandler;
+        private static HandlerRoutine consoleHandler;
 
         public enum CtrlTypes
         {
-            CTRL_C_EVENT = 0,
-            CTRL_BREAK_EVENT,
-            CTRL_CLOSE_EVENT,
-            CTRL_LOGOFF_EVENT = 5,
-            CTRL_SHUTDOWN_EVENT
+            CTRL_C_EVENT = 0
         }
         private static bool ConsoleCtrlCheck(CtrlTypes ctrlType)
         {
             if (ctrlType.Equals(CtrlTypes.CTRL_C_EVENT))
-            {
-                _userRequestExit = true;
-                throw new ApplicationException("Stop programm");
-            }
+                Process.GetCurrentProcess().Kill();
+            
             return true;
         }
 
