@@ -13,108 +13,51 @@ namespace VeeamSoftware_test.Gzip
 
     public  class GzipDriver
     {
-        static Mutex mtx = new Mutex();
-        private static GZipStream _zipStream;
-        private string compressDir;
-        private string compressFileName;
-        private string decompressDir;
+        static  Queue<byte[]> _queue = new Queue<byte[]>();
+        static Semaphore _semaphore = new Semaphore(0, Int32.MaxValue);
+        private const int _bufferSize = 2*1024;
+        static object _locker = new object();
 
-        public static GZipStream ZipStream
+        public static void ModificationOfData(Stream sourceStrem, Stream outputStream)
         {
-            get { return _zipStream; }
-            set { _zipStream = value; }
-        }
-        public string CompressDir
-        {
-            get { return compressDir; }
-            set { compressDir = value; }
-        }
-        public string DeCompressDir
-        {
-            get { return decompressDir; }
-            set { decompressDir = value; }
-        }
-        public string CompressFileName
-        {
-            get { return compressFileName; }
-            set { compressFileName = value; }
-        }
-        public  void CompressFile()
-        {
-            /*lock (ZipStream)
-            {*/
-            while (ZipStream == null) ;
-            //mtx.WaitOne();
-                //CompresFileName();
-                char[] chars = CompressFileName.ToCharArray();
-                ZipStream.Write(BitConverter.GetBytes(chars.Length), 0, sizeof(int));
-                foreach (char c in chars)
-                    ZipStream.Write(BitConverter.GetBytes(c), 0, sizeof(char));
-
-                //Compress file content
-                byte[] bytes = File.ReadAllBytes(Path.Combine(CompressDir, CompressFileName));
-                ZipStream.Write(BitConverter.GetBytes(bytes.Length), 0, sizeof(int));
-                ZipStream.Write(bytes, 0, bytes.Length);
-            //mtx.ReleaseMutex();
-            //}
-            
-        }
-
-        private void CompresFileName()
-        {
-            //Compress file name
-
-            char[] chars = CompressFileName.ToCharArray();
-            ZipStream.Write(BitConverter.GetBytes(chars.Length), 0, sizeof(int));
-            foreach (char c in chars)
-                ZipStream.Write(BitConverter.GetBytes(c), 0, sizeof(char));
-
-
-        }
-
-        public  bool DecompressFile()
-        {
-            string sFileName = DecompressFileName();
-            if (sFileName == null)
-                return false;
-
-            //Decompress file content
-            byte[]  bytes = new byte[sizeof(int)];
-            ZipStream.Read(bytes, 0, sizeof(int));
-            int iFileLen = BitConverter.ToInt32(bytes, 0);
-
-            bytes = new byte[iFileLen];
-            ZipStream.Read(bytes, 0, bytes.Length);
-
-            string sFilePath = Path.Combine(DeCompressDir, sFileName);
-            string sFinalDir = Path.GetDirectoryName(sFilePath);
-            if (!Directory.Exists(sFinalDir))
-                Directory.CreateDirectory(sFinalDir);
-
-            using (FileStream outFile = new FileStream(sFilePath, FileMode.Create, FileAccess.Write, FileShare.None))
-                outFile.Write(bytes, 0, iFileLen);
-
-            return true;
-        }
-        private  string DecompressFileName()
-        {
-            //Decompress file name
-
-            byte[] bytes = new byte[sizeof(int)];
-            int Readed = ZipStream.Read(bytes, 0, sizeof(int));
-            if (Readed < sizeof(int))
-                return null;
-
-            int iNameLen = BitConverter.ToInt32(bytes, 0);
-            bytes = new byte[sizeof(char)];
-            StringBuilder sb = new StringBuilder();
-            for (int i = 0; i < iNameLen; i++)
+            Thread threadWrite = new Thread(Write);
+            threadWrite.Start(outputStream);
+            int bytesCount;
+            var buffer = new byte[_bufferSize];
+            while ((bytesCount = sourceStrem.Read(buffer,0, _bufferSize)) != 0)
             {
-                ZipStream.Read(bytes, 0, sizeof(char));
-                char c = BitConverter.ToChar(bytes, 0);
-                sb.Append(c);
+                if (bytesCount < _bufferSize)
+                    buffer.Take(bytesCount);
+
+                PushBlock(buffer);
+                buffer = new byte[_bufferSize];
             }
-            return sb.ToString();
+        }
+
+        private static void PushBlock(byte[] buffer)
+        {
+            lock (_locker)
+            {
+                _queue.Enqueue(buffer);
+                _semaphore.Release();
+            }
+        }
+
+        private static void Write(Object obj)
+        {
+            Stream outStream = obj as Stream;
+            while (true)
+            {
+                _semaphore.WaitOne();
+                byte[] buffer;
+                lock (_locker)
+                {
+                    buffer = _queue.Dequeue();
+                }
+                if(buffer == null)
+                    break;
+                outStream.Write(buffer,0,buffer.Length);
+            }
         }
     }
 }
