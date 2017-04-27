@@ -27,11 +27,19 @@ namespace UnitTest
 
             using (FileStream outFile = new FileStream(output, FileMode.Create, FileAccess.Write, FileShare.None))
             using (GZipStream str = new GZipStream(outFile, CompressionMode.Compress))
+            {
+                GzipDriver driver = new GzipDriver();
+                driver.CompressDir = input;
+                GzipDriver.ZipStream = str;
+
                 foreach (string sFilePath in sFiles)
                 {
                     string sRelativePath = sFilePath.Substring(iDirLen);
-                    GzipDriver.CompressFile(input, sRelativePath, str);
+                    driver.CompressFileName = sRelativePath;
+                    driver.CompressFile();
+                    //GzipDriver.CompressFile(input, sRelativePath, str);
                 }
+            }
         }
         [TestMethod]
         public void CompressFile()
@@ -48,7 +56,12 @@ namespace UnitTest
             using (GZipStream str = new GZipStream(outFile, CompressionMode.Compress))
             {
                 string sRelativePath = Path.GetFileName(input);
-                GzipDriver.CompressFile(Path.GetDirectoryName(input), sRelativePath, str);
+
+                GzipDriver driver = new GzipDriver();
+                driver.CompressDir = Path.GetDirectoryName(input);
+                driver.CompressFileName = sRelativePath;
+                GzipDriver.ZipStream = str;
+                driver.CompressFile();
             }
         }
 
@@ -73,7 +86,13 @@ namespace UnitTest
         {
             using (FileStream inFile = new FileStream(input, FileMode.Open, FileAccess.Read, FileShare.None))
             using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
-                while (GzipDriver.DecompressFile(output, zipStream)) ;
+            {
+                GzipDriver driver = new GzipDriver();
+                GzipDriver.ZipStream = zipStream;
+                driver.DeCompressDir = output;
+
+                while (driver.DecompressFile()) ;
+            }
         }
         [TestMethod]
         public void DecompressToFile()

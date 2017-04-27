@@ -24,11 +24,18 @@ namespace VeeamSoftware_test.Gzip
                 using (GZipStream gZipStream = new GZipStream(outFile, CompressionMode.Compress))
                 {
                     string dir = "";
+                    GzipDriver.ZipStream = gZipStream;
                     List<Thread> threads = new List<Thread>();
                     foreach (string sFilePath in getPathFiles(input, out dir))
                     {
-                        GzipDriver.CompressFile(dir, sFilePath, gZipStream);
+                        GzipDriver driver =new GzipDriver();
+                        driver.CompressDir = dir;
+                        driver.CompressFileName = sFilePath;
+                        //driver.ZipStream = gZipStream;
+                        threads.Add(new Thread(driver.CompressFile));
                     }
+                    foreach (Thread thred in threads)
+                        thred.Start();
                 }
             }
         }
@@ -39,7 +46,7 @@ namespace VeeamSoftware_test.Gzip
             {
                 using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
                 {
-                    while (GzipDriver.DecompressFile(output, zipStream));
+                    //while (GzipDriver.DecompressFile(output, zipStream));
                 }
             }
         }
