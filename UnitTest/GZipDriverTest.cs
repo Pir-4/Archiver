@@ -9,7 +9,7 @@ namespace UnitTest
     [TestClass]
     public class GZipDriverTest
     {
-        [TestMethod]
+        /*[TestMethod]
         public void CompressDirectory()
         {
             string input = @"E:\education\programs\test";
@@ -19,8 +19,8 @@ namespace UnitTest
 
             Assert.IsTrue(File.Exists(output));
             File.Delete(output);
-        }
-        private void CompressDirectory(string input,string output)
+        }*/
+        /*private void CompressDirectory(string input,string output)
         {
             string[] sFiles = Directory.GetFiles(input, "*.*", SearchOption.AllDirectories);
             int iDirLen = input[input.Length - 1] == Path.DirectorySeparatorChar ? input.Length : input.Length + 1;
@@ -40,8 +40,8 @@ namespace UnitTest
                     //GzipDriver.CompressFile(input, sRelativePath, str);
                 }
             }
-        }
-        [TestMethod]
+        }*/
+        /*[TestMethod]
         public void CompressFile()
         {
             string input = @"E:\education\programs\test\test.txt";
@@ -49,8 +49,8 @@ namespace UnitTest
             CompressFile(input, output);
             Assert.IsTrue(File.Exists(output));
                 File.Delete(output);
-        }
-        private void CompressFile(string input, string output)
+        }*/
+        /*private void CompressFile(string input, string output)
         {
             using (FileStream outFile = new FileStream(output, FileMode.Create, FileAccess.Write, FileShare.None))
             using (GZipStream str = new GZipStream(outFile, CompressionMode.Compress))
@@ -63,9 +63,9 @@ namespace UnitTest
                 GzipDriver.ZipStream = str;
                 driver.CompressFile();
             }
-        }
+        }*/
 
-        [TestMethod]
+        /*[TestMethod]
         public void DecompressToDirectory()
         {
             string input_1 = @"E:\education\programs\test";
@@ -80,9 +80,9 @@ namespace UnitTest
 
             Directory.Delete(output,true);
             File.Delete(input);
-        }
+        }*/
 
-        public void Decompress(string input, string output)
+        /*public void Decompress(string input, string output)
         {
             using (FileStream inFile = new FileStream(input, FileMode.Open, FileAccess.Read, FileShare.None))
             using (GZipStream zipStream = new GZipStream(inFile, CompressionMode.Decompress, true))
@@ -93,8 +93,8 @@ namespace UnitTest
 
                 while (driver.DecompressFile()) ;
             }
-        }
-        [TestMethod]
+        }*/
+        /*[TestMethod]
         public void DecompressToFile()
         {
             string input_1 = @"E:\education\programs\test\test.txt";
@@ -109,6 +109,6 @@ namespace UnitTest
 
             Directory.Delete(output, true);
             File.Delete(input);
-        }
+        }*/
     }
 }

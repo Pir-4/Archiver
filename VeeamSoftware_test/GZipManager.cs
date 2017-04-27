@@ -28,6 +28,7 @@ namespace VeeamSoftware_test.Gzip
 
             return null;
         }
+
         public abstract void Execute(string sourceFile, string resultFile);
     }
 
@@ -35,29 +36,31 @@ namespace VeeamSoftware_test.Gzip
     {
         public override void Execute(string sourceFile, string resultFile)
         {
-            using (var sourceStream = new FileStream(sourceFile,FileMode.Open,FileAccess.Read,FileShare.Read))
-            {
-                using (var outStream = new FileStream(resultFile, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read))
                 {
-                    using (var gZipStream = new GZipStream(outStream, CompressionMode.Compress))
+                    using (var outStream = new FileStream(resultFile, FileMode.Create, FileAccess.Write))
                     {
-                        GzipDriver.ModificationOfData(sourceStream, gZipStream);
+                        using (var gZipStream = new GZipStream(outStream, CompressionMode.Compress))
+                        {
+                            GzipDriver.ModificationOfData(sourceStream, gZipStream);
+                        }
                     }
                 }
-            }
+
+            
         }
     }
     public class GZipManagerDecompress : GZipManager
     {
         public override void Execute(string sourceFile, string resultFile)
         {
-            using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read))
+            using (var sourceStream = new FileStream(sourceFile, FileMode.Open, FileAccess.Read))
             {
                 using (var gZipStream = new GZipStream(sourceStream, CompressionMode.Decompress))
                 {
-                    using (var outStream = new FileStream(resultFile,FileMode.Create,FileAccess.Write,FileShare.None))
+                    using (var outStream = new FileStream(resultFile,FileMode.Create,FileAccess.Write))
                     {
-                        GzipDriver.ModificationOfData(sourceStream, outStream);
+                        GzipDriver.ModificationOfData(gZipStream, outStream);
                     }
                 }
             }

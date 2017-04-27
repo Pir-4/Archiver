@@ -18,19 +18,20 @@ namespace UnitTest
             string input = @"E:\education\programs\test";
             string output = @"E:\education\programs\test.gzip";
 
-            Compress(input, output);
+            IGZipManager zip =new GZipManagerCompress();
+            zip.Execute(input, output);
 
             Assert.IsTrue(File.Exists(output));
-            File.Delete(output);
+            //File.Delete(output);
         }
-        private IGZipManager Compress(string input, string output)
+        /*private IGZipManager Compress(string input, string output)
         {
             IGZipManager manager = new GZipManager();
             manager.Compress(input, output);
 
             return manager;
-        }
-        [TestMethod]
+        }*/
+        /*[TestMethod]
         public void CompressFile()
         {
             string input = @"E:\education\programs\test\test.txt";
@@ -38,24 +39,28 @@ namespace UnitTest
             Compress(input, output);
             Assert.IsTrue(File.Exists(output));
             File.Delete(output);
-        }
+        }*/
 
         [TestMethod]
         public void DecompressToDirectory()
         {
-            string input_1 = @"E:\education\programs\test";
+            string input_1 = @"E:\education\programs\test\";
 
-            string output = @"E:\education\programs\test2";
+            string output = @"E:\education\programs\test22";
             string input = @"E:\education\programs\test.gzip";
 
-            Compress(input_1, input).Decompress(input, output);
+            IGZipManager zip = new GZipManagerCompress();
+            zip.Execute(input_1, input);
 
-            Assert.IsTrue(Directory.Exists(output));
+            zip = new GZipManagerDecompress();
+            zip.Execute(input, output);
 
-            Directory.Delete(output, true);
-            File.Delete(input);
+            //Assert.IsTrue(Directory.Exists(output));
+
+            //Directory.Delete(output, true);
+           // File.Delete(input);
         }
-        [TestMethod]
+        /*[TestMethod]
         public void DecompressToFile()
         {
             string input_1 = @"E:\education\programs\test\test.txt";
