@@ -56,7 +56,7 @@ namespace VeeamSoftware_test
                 
                 Console.WriteLine(String.Format(CultureInfo.InvariantCulture, "Error:\n Message: {0} \n StackTrace:\n {1}", e.Message,e.StackTrace));
                 return 1;
-            }
+               }
             return 0;
         }
         private static IGZipManager ValidateArguments(string[] argv)

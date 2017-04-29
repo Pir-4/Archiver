@@ -19,7 +19,7 @@ namespace VeeamSoftware_test.Gzip
         static object _lockerWrite = new object();
         static object _lockerRead = new object();
 
-        private const int _bufferSize = 2*1024;
+        private const int _bufferSize = 1024*1024;
         private static Exception exception;
 
         public static void ModificationOfData(Stream sourceStrem, Stream outputStream)
@@ -40,8 +40,8 @@ namespace VeeamSoftware_test.Gzip
             finally
             {
                 PushBlock(null);
-                threadWrite.Join();
                 threadRead.Join();
+                threadWrite.Join();
             }
 
             if (exception != null)
