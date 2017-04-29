@@ -11,7 +11,7 @@ using VeeamSoftware_test.Gzip;
 
 namespace VeeamSoftware_test
 {
-    class Program
+    public class Program
     {
         public delegate bool HandlerRoutine(CtrlTypes CtrlType);
 
@@ -45,7 +45,11 @@ namespace VeeamSoftware_test
                 consoleHandler = new HandlerRoutine(ConsoleCtrlCheck);
                 SetConsoleCtrlHandler(consoleHandler, true);
 
-                Work(argv);
+                IGZipManager manager = ValidateArguments(argv);
+
+                Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion started. Input file: {1}", manager.Act, manager.SourceFile));
+                manager.Execute();
+                Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion completed. Output archeve: ", manager.Act, manager.ResultFile));
             }
             catch (Exception e)
             {
@@ -55,16 +59,6 @@ namespace VeeamSoftware_test
             }
             return 0;
         }
-
-        private static void Work(string[] argv)
-        {
-            IGZipManager manager = ValidateArguments(argv);
-
-            Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion started", manager.Act));
-            manager.Execute();
-            Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion completed", manager.Act));
-        }
-
         private static IGZipManager ValidateArguments(string[] argv)
         {
             if (argv == null || argv.Length != 3)
@@ -84,6 +78,9 @@ namespace VeeamSoftware_test
 
             if(!File.Exists(argv[1]))
                 throw new ArgumentException("Please enter correct source file name.");
+
+            if (!Directory.Exists(Path.GetDirectoryName(argv[2])))
+                throw new ArgumentException("Please enter correct directory output file.");
 
             result.SourceFile = argv[1];
             result.ResultFile = argv[2];

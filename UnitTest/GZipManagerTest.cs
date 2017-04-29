@@ -33,7 +33,7 @@ namespace UnitTest
 
             FileInfo Etalon = new FileInfo(input_1);
             FileInfo create = new FileInfo(output);
-            Assert.IsTrue( Etalon.Length == create.Length);
+            Assert.IsTrue(Etalon.Length == create.Length);
 
             File.Delete(output);
             File.Delete(input);
@@ -63,7 +63,5 @@ namespace UnitTest
             File.Delete(output);
             File.Delete(input);
         }
-
-
     }
 }
