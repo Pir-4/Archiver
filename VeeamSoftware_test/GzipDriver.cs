@@ -14,32 +14,22 @@ namespace VeeamSoftware_test.Gzip
     public class GzipDriver
     {
         static Queue<byte[]> _queue = new Queue<byte[]>();
+
         static Semaphore _semaphore = new Semaphore(0, Int32.MaxValue);
-        static Semaphore _semaphoreRead ;
-        private const int _bufferSize = 2*1024;
         static object _lockerWrite = new object();
         static object _lockerRead = new object();
+
+        private const int _bufferSize = 2*1024;
         private static Exception exception;
-        static List<Thread> threadRead = new List<Thread>();
-        static List<Thread> threadWrite = new List<Thread>();
-        private static int count = 5;
 
         public static void ModificationOfData(Stream sourceStrem, Stream outputStream)
         {
-            /*Thread threadWrite = new Thread(Write);
-            Thread threadRead = new Thread(Read);*/
+            Thread threadWrite = new Thread(Write);
+            Thread threadRead = new Thread(Read);
             try
             {
-                 _semaphoreRead = new Semaphore(count, _bufferSize * 10);
-                for (int i = 0; i < count; i++)
-                {
-                    threadRead.Add(new Thread(Read));
-                    threadWrite.Add(new Thread(Write));
-                    threadRead[i].Start(sourceStrem);
-                    threadWrite[i].Start(outputStream);
-                }
-               /* threadWrite.Start(outputStream);
-                threadRead.Start(sourceStrem);*/
+                threadWrite.Start(outputStream);
+                threadRead.Start(sourceStrem);
                 Read(sourceStrem);
             }
             catch (Exception e)
@@ -50,12 +40,8 @@ namespace VeeamSoftware_test.Gzip
             finally
             {
                 PushBlock(null);
-                //threadWrite.Join();
-                for (int i = 0; i < count; i++)
-                {
-                    threadRead[i].Join();
-                    threadWrite[i].Join();
-                }
+                threadWrite.Join();
+                threadRead.Join();
             }
 
             if (exception != null)
@@ -81,7 +67,6 @@ namespace VeeamSoftware_test.Gzip
 
                 while (true)
                 {
-                    _semaphoreRead.WaitOne();
                     var buffer = new byte[_bufferSize];
                     lock (_lockerRead)
                     {
@@ -102,8 +87,8 @@ namespace VeeamSoftware_test.Gzip
         }
         private static void Write(Object obj)
         {
-            /*try
-            {*/
+            try
+            {
                 Stream outStream = obj as Stream;
                 while (true)
                 {
@@ -116,14 +101,13 @@ namespace VeeamSoftware_test.Gzip
                         break;
 
                     outStream.Write(buffer, 0, buffer.Length);
-                    _semaphoreRead.Release();
                 }
-            //}
-            /*catch (Exception e)
+            }
+            catch (Exception e)
             {
 
                 exception = e;
-            }*/
+            }
             
 
         }
