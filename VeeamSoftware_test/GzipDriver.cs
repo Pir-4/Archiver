@@ -13,8 +13,12 @@ namespace VeeamSoftware_test.Gzip
 
     public class GzipDriver
     {
+        delegate void ThreadsActions(Thread thr, object stream);
+
         static Queue<byte[]> _queue = new Queue<byte[]>();
 
+        private static Thread[] _threads;
+        private static int _processCount;
         static Semaphore _semaphoreWrite = new Semaphore(0, Int32.MaxValue);
         static Semaphore _semaphoreRead = new Semaphore(10, 3000);
 
@@ -28,29 +32,25 @@ namespace VeeamSoftware_test.Gzip
 
         public static void ModificationOfData(Stream sourceStrem, Stream outputStream)
         {
-            int processCount = Environment.ProcessorCount > 2 ? Environment.ProcessorCount : 2;
-
-            Thread [] threads = new Thread[processCount];
+             _processCount = Environment.ProcessorCount > 2 ? Environment.ProcessorCount : 2;
+            Thread [] _threads = new Thread[_processCount];
 
             try
             {
-                for (int i = 0; i < processCount; i++)
+                for (int i = 0; i < _processCount; i++)
                 {
-                    if(i % 2 == 0)
-                        threads[i] =new Thread(Write);
+                    if (i%2 == 0)
+                    {
+                        _threads[i] = new Thread(Write);
+                        _threads[i].Start(outputStream);
+                    }
                     else
-                        threads[i] = new Thread(Read);
-                    
-                }
-                for (int i = 0; i < processCount; i++)
-                {
-                    if (i % 2 == 0)
-                        threads[i].Start(outputStream);
-                    else
-                        threads[i].Start(sourceStrem);
+                    {
+                        _threads[i] = new Thread(Read);
+                        _threads[i].Start(sourceStrem);
+                    }
 
                 }
-                //Read(sourceStrem);
                 autoResetEvent.WaitOne();
             }
             catch (Exception e)
@@ -60,13 +60,8 @@ namespace VeeamSoftware_test.Gzip
             }
             finally
             {
-               // PushBlock(null);
-                for (int i = 0; i < processCount; i++)
-                {
-                        threads[i].Join();
-                }
-                /* threadRead.Join();
-                 threadWrite.Join();*/
+                for (int i = 0; i < _processCount; i++)
+                    _threads[i].Join();
             }
 
             if (exception != null)
