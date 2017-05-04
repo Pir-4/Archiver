@@ -16,10 +16,12 @@ namespace VeeamSoftware_test.Gzip
         static Queue<byte[]> _queue = new Queue<byte[]>();
 
         static Semaphore _semaphoreWrite = new Semaphore(0, Int32.MaxValue);
-        static Semaphore _semaphoreRead = new Semaphore(0, 3000);
+        static Semaphore _semaphoreRead = new Semaphore(10, 3000);
 
         static object _lockerWrite = new object();
         static object _lockerRead = new object();
+
+        static AutoResetEvent autoResetEvent = new AutoResetEvent(false);
 
         private const int _bufferSize = 1024*1024*1024;
         private static Exception exception;
@@ -29,8 +31,6 @@ namespace VeeamSoftware_test.Gzip
             int processCount = Environment.ProcessorCount > 2 ? Environment.ProcessorCount : 2;
 
             Thread [] threads = new Thread[processCount];
-           /* Thread threadWrite = new Thread(Write);
-            Thread threadRead = new Thread(Read);*/
 
             try
             {
@@ -50,9 +50,8 @@ namespace VeeamSoftware_test.Gzip
                         threads[i].Start(sourceStrem);
 
                 }
-                /*threadWrite.Start(outputStream);
-                threadRead.Start(sourceStrem);*/
-                Read(sourceStrem);
+                //Read(sourceStrem);
+                autoResetEvent.WaitOne();
             }
             catch (Exception e)
             {
@@ -61,7 +60,7 @@ namespace VeeamSoftware_test.Gzip
             }
             finally
             {
-                PushBlock(null);
+               // PushBlock(null);
                 for (int i = 0; i < processCount; i++)
                 {
                         threads[i].Join();
@@ -99,7 +98,10 @@ namespace VeeamSoftware_test.Gzip
                     {
                         int bytesCount = sourceStrem.Read(buffer, 0, _bufferSize);
                         if (bytesCount == 0)
+                        {
+                            PushBlock(null);
                             break;
+                        }
 
                         buffer = bytesCount < _bufferSize ? buffer.Take(bytesCount).ToArray() : buffer;
                         PushBlock(buffer);
@@ -126,7 +128,10 @@ namespace VeeamSoftware_test.Gzip
                         buffer = _queue.Dequeue();
 
                         if (buffer == null)
+                        {
+                            autoResetEvent.Set();
                             break;
+                        }
 
                         outStream.Write(buffer, 0, buffer.Length);
                         _semaphoreRead.Release();

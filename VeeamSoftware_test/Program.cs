@@ -49,7 +49,7 @@ namespace VeeamSoftware_test
 
                 Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion started. Input file: {1}", manager.Act, manager.SourceFile));
                 manager.Execute();
-                Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion completed. Output file: ", manager.Act, manager.ResultFile));
+                Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion completed. Output file: {1}", manager.Act, manager.ResultFile));
             }
             catch (Exception e)
             {
