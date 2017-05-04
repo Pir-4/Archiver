@@ -15,21 +15,43 @@ namespace VeeamSoftware_test.Gzip
     {
         static Queue<byte[]> _queue = new Queue<byte[]>();
 
-        static Semaphore _semaphore = new Semaphore(0, Int32.MaxValue);
+        static Semaphore _semaphoreWrite = new Semaphore(0, Int32.MaxValue);
+        static Semaphore _semaphoreRead = new Semaphore(0, 3000);
+
         static object _lockerWrite = new object();
         static object _lockerRead = new object();
 
-        private const int _bufferSize = 1024*1024;
+        private const int _bufferSize = 1024*1024*1024;
         private static Exception exception;
 
         public static void ModificationOfData(Stream sourceStrem, Stream outputStream)
         {
-            Thread threadWrite = new Thread(Write);
-            Thread threadRead = new Thread(Read);
+            int processCount = Environment.ProcessorCount > 2 ? Environment.ProcessorCount : 2;
+
+            Thread [] threads = new Thread[processCount];
+           /* Thread threadWrite = new Thread(Write);
+            Thread threadRead = new Thread(Read);*/
+
             try
             {
-                threadWrite.Start(outputStream);
-                threadRead.Start(sourceStrem);
+                for (int i = 0; i < processCount; i++)
+                {
+                    if(i % 2 == 0)
+                        threads[i] =new Thread(Write);
+                    else
+                        threads[i] = new Thread(Read);
+                    
+                }
+                for (int i = 0; i < processCount; i++)
+                {
+                    if (i % 2 == 0)
+                        threads[i].Start(outputStream);
+                    else
+                        threads[i].Start(sourceStrem);
+
+                }
+                /*threadWrite.Start(outputStream);
+                threadRead.Start(sourceStrem);*/
                 Read(sourceStrem);
             }
             catch (Exception e)
@@ -40,8 +62,12 @@ namespace VeeamSoftware_test.Gzip
             finally
             {
                 PushBlock(null);
-                threadRead.Join();
-                threadWrite.Join();
+                for (int i = 0; i < processCount; i++)
+                {
+                        threads[i].Join();
+                }
+                /* threadRead.Join();
+                 threadWrite.Join();*/
             }
 
             if (exception != null)
@@ -55,7 +81,7 @@ namespace VeeamSoftware_test.Gzip
             lock (_lockerWrite)
             {
                 _queue.Enqueue(buffer);
-                _semaphore.Release();
+                _semaphoreWrite.Release();
             }
         }
 
@@ -67,6 +93,7 @@ namespace VeeamSoftware_test.Gzip
 
                 while (true)
                 {
+                    _semaphoreRead.WaitOne();
                     var buffer = new byte[_bufferSize];
                     lock (_lockerRead)
                     {
@@ -92,15 +119,18 @@ namespace VeeamSoftware_test.Gzip
                 Stream outStream = obj as Stream;
                 while (true)
                 {
-                    _semaphore.WaitOne();
+                    _semaphoreWrite.WaitOne();
                     byte[] buffer;
                     lock (_lockerWrite)
+                    {
                         buffer = _queue.Dequeue();
 
-                    if (buffer == null)
-                        break;
+                        if (buffer == null)
+                            break;
 
-                    outStream.Write(buffer, 0, buffer.Length);
+                        outStream.Write(buffer, 0, buffer.Length);
+                        _semaphoreRead.Release();
+                    }
                 }
             }
             catch (Exception e)
