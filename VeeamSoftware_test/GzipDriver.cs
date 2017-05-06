@@ -13,37 +13,39 @@ namespace VeeamSoftware_test.Gzip
 
     public abstract class GzipDriver
     {
-        protected Queue<byte[]> _queue = new Queue<byte[]>();
+        private Queue<byte[]> _queue = new Queue<byte[]>();
 
         
-        protected Semaphore _semaphoreWrite = new Semaphore(0, Int32.MaxValue);
-        protected Semaphore _semaphoreCheckWriteOutputStream = new Semaphore(0, 1);
+        private Semaphore _semaphoreWrite = new Semaphore(0, Int32.MaxValue);
+        private Semaphore _semaphoreCheckWriteOutputStream = new Semaphore(0, 1);
 
         
-        protected Semaphore _semaphoreRead = new Semaphore(10, 3000);
-        protected Semaphore _semaphoreCheckReadInputStream = new Semaphore(0, 1);
+        private Semaphore _semaphoreRead = new Semaphore(10, 3000);
+        private Semaphore _semaphoreCheckReadInputStream = new Semaphore(0, 1);
 
-        protected object _lockerWrite = new object();
-        protected object _lockerRead = new object();
+        private object _lockerWrite = new object();
+        private object _lockerRead = new object();
 
-        AutoResetEvent autoResetEvent = new AutoResetEvent(false);
+        private AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
 
-        protected const int _bufferSize = 1024*1024*1024;
-        private  Exception exception;
+        private const int _bufferSize = 1024*1024*1024;
+        private const long _maxSizeStream = 4294967296;
 
-        protected Stream sourceStrem;
-        protected Stream outputStream;
+        private  Exception _exception;
 
-        protected  string sourceFile;
-        protected string outputFile;
+        protected Stream _sourceStream;
+        protected Stream _outputStream;
 
-        protected long sizeOutStream;
-        protected long sizeInStream;
+        protected  string _pathSourceFile;
+        protected string _pathOutputFile;
 
-        public GzipDriver(string pathSourceFile, string pathOutputFile)
+        private long _sizeMemorySizeOutStream;
+        private long _sizeMemorySourceStream;
+
+        public GzipDriver(string pathPathSourceFile, string pathPathOutputFile)
         {
-            sourceFile = pathSourceFile;
-            outputFile = pathOutputFile;
+            _pathSourceFile = pathPathSourceFile;
+            _pathOutputFile = pathPathOutputFile;
         }
 
         public void ModificationOfData()
@@ -53,7 +55,7 @@ namespace VeeamSoftware_test.Gzip
 
             try
             {
-                initStream();
+                InitStream();
                 for (int i = 0; i < _processCount; i++)
                 {
                     if (i%2 == 0)
@@ -68,7 +70,7 @@ namespace VeeamSoftware_test.Gzip
                     }
 
                 }
-                autoResetEvent.WaitOne();
+                _autoResetEvent.WaitOne();
             }
             catch (Exception e)
             {
@@ -80,12 +82,12 @@ namespace VeeamSoftware_test.Gzip
                 for (int i = 0; i < _processCount; i++)
                     _threads[i].Join();
 
-                sourceStrem.Close();
-                outputStream.Close();
+                _sourceStream.Close();
+                _outputStream.Close();
             }
 
-            if (exception != null)
-                throw exception;
+            if (_exception != null)
+                throw _exception;
         }
 
         private  void PushBlock(byte[] buffer)
@@ -109,7 +111,7 @@ namespace VeeamSoftware_test.Gzip
                     var buffer = new byte[_bufferSize];
                     lock (_lockerRead)
                     {
-                        int bytesCount = sourceStrem.Read(buffer, 0, _bufferSize);
+                        int bytesCount = _sourceStream.Read(buffer, 0, _bufferSize);
                         if (bytesCount == 0)
                         {
                             PushBlock(null);
@@ -117,7 +119,7 @@ namespace VeeamSoftware_test.Gzip
                         }
                         
                         buffer = bytesCount < _bufferSize ? buffer.Take(bytesCount).ToArray() : buffer;
-                        sizeInStream += buffer.Length; 
+                        _sizeMemorySourceStream += buffer.Length; 
                         PushBlock(buffer);
                     }
                 }
@@ -125,7 +127,7 @@ namespace VeeamSoftware_test.Gzip
             catch (Exception e)
             {
 
-                exception = e;
+                _exception = e;
             }
         }
         private  void Write()
@@ -142,12 +144,12 @@ namespace VeeamSoftware_test.Gzip
 
                         if (buffer == null)
                         {
-                            autoResetEvent.Set();
+                            _autoResetEvent.Set();
                             break;
                         }
 
-                        outputStream.Write(buffer, 0, buffer.Length);
-                        sizeOutStream += buffer.Length;
+                        _outputStream.Write(buffer, 0, buffer.Length);
+                        _sizeMemorySizeOutStream += buffer.Length;
                         _semaphoreRead.Release();
                     }
                 }
@@ -155,114 +157,97 @@ namespace VeeamSoftware_test.Gzip
             catch (Exception e)
             {
 
-                exception = e;
+                _exception = e;
             }
             
 
         }
 
-        protected abstract void checkOutputStream();
-        protected abstract void checkInputStream();
-        protected abstract void initStream();
+        protected void checkOutputStream()
+        {
+            _semaphoreWrite.WaitOne();
+            lock (_lockerWrite)
+            {
+                if (_sizeMemorySizeOutStream + _queue.Peek().Length >= _maxSizeStream)
+                {
+                    _outputStream.Close();
+                    _outputStream = GetOutputStream();
+                    _sizeMemorySizeOutStream = 0;
+                }
+                _semaphoreCheckWriteOutputStream.Release();
+            }
+        }
+
+        protected  void checkInputStream()
+        {
+            _semaphoreRead.WaitOne();
+            lock (_lockerRead)
+            {
+                if (_sizeMemorySourceStream + _bufferSize >= 1294967296)
+                {
+                    long position = _sourceStream.Position;
+                    _sourceStream.Close();
+                    _sourceStream = GetSourceStream();
+                    _sourceStream.Position = position;
+                    _sizeMemorySourceStream = 0;
+
+                }
+                _semaphoreCheckReadInputStream.Release();
+            }
+        }
+
+        protected abstract void InitStream();
+        protected abstract Stream GetOutputStream();
+        protected abstract Stream GetSourceStream();
 
     }
 
     public class GzipDriverCompress : GzipDriver
     {
-        public GzipDriverCompress(string pathSourceFile, string pathOutputFile) : base(pathSourceFile, pathOutputFile)
+        public GzipDriverCompress(string pathPathSourceFile, string pathPathOutputFile) : base(pathPathSourceFile, pathPathOutputFile)
         {
             
         }
 
-        protected override void initStream()
+        protected override void InitStream()
         {
-            sourceStrem = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
-            outputStream =
-                new GZipStream(new FileStream(outputFile, FileMode.Create, FileAccess.Write, FileShare.Read),
+            _sourceStream = new FileStream(_pathSourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
+            _outputStream =
+                new GZipStream(new FileStream(_pathOutputFile, FileMode.Create, FileAccess.Write, FileShare.Read),
                     CompressionMode.Compress);
         }
-        protected override void checkOutputStream()
-        {
-            _semaphoreWrite.WaitOne();
-            lock (_lockerWrite)
-            {
-                if (sizeOutStream + _queue.Peek().Length >= 1294967296)
-                {
-                    outputStream.Close();
-                    outputStream = new GZipStream(new FileStream(outputFile, FileMode.Append, FileAccess.Write, FileShare.Read), CompressionMode.Compress);
-                    sizeOutStream = 0;
-                }
-                _semaphoreCheckWriteOutputStream.Release();
-            }
 
+        protected override Stream GetOutputStream()
+        {
+            return new GZipStream(new FileStream(_pathOutputFile, FileMode.Append, FileAccess.Write, FileShare.Read), CompressionMode.Compress);
         }
 
-        protected override void checkInputStream()
+        protected override Stream GetSourceStream()
         {
-            _semaphoreRead.WaitOne();
-            lock (_lockerRead)
-            {
-                if (sizeInStream + _bufferSize >= 1294967296)
-                {
-                    long position = sourceStrem.Position;
-                    sourceStrem.Close();
-                    sourceStrem = new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
-                    sourceStrem.Position = position;
-                    sizeInStream = 0;
-
-                }
-                _semaphoreCheckReadInputStream.Release();
-            }
+            return new FileStream(_pathSourceFile, FileMode.Open, FileAccess.Read, FileShare.Read);
         }
     }
     public class GzipDriverDecompress : GzipDriver
     {
-        public GzipDriverDecompress(string pathSourceFile, string pathOutputFile) : base(pathSourceFile, pathOutputFile)
-        {
+        public GzipDriverDecompress(string pathPathSourceFile, string pathPathOutputFile) : base(pathPathSourceFile, pathPathOutputFile)
+        {}
 
-        }
-
-        protected override void initStream()
+        protected override void InitStream()
         {
-            sourceStrem =
-                new GZipStream(new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read),
+            _sourceStream =
+                new GZipStream(new FileStream(_pathSourceFile, FileMode.Open, FileAccess.Read, FileShare.Read),
                     CompressionMode.Decompress);
 
-            outputStream = new FileStream(outputFile, FileMode.Create, FileAccess.Write, FileShare.Read);
+            _outputStream = new FileStream(_pathOutputFile, FileMode.Create, FileAccess.Write, FileShare.Read);
         }
-        protected override void checkOutputStream()
+        protected override Stream GetOutputStream()
         {
-            _semaphoreWrite.WaitOne();
-            lock (_lockerWrite)
-            {
-                if (sizeOutStream + _queue.Peek().Length >= 1294967296)
-                {
-                    outputStream.Close();
-                    outputStream = new FileStream(outputFile, FileMode.Append, FileAccess.Write, FileShare.Read);
-                    sizeOutStream = 0;
-                }
-                _semaphoreCheckWriteOutputStream.Release();
-            }
-
+            return new FileStream(_pathOutputFile, FileMode.Append, FileAccess.Write, FileShare.Read);
         }
-
-        protected override void checkInputStream()
+        protected override Stream GetSourceStream()
         {
-            _semaphoreRead.WaitOne();
-            lock (_lockerRead)
-            {
-                if (sizeInStream + _bufferSize >= 1294967296)
-                {
-                    long position = sourceStrem.Position;
-                    sourceStrem.Close();
-                    sourceStrem = new GZipStream(new FileStream(sourceFile, FileMode.Open, FileAccess.Read, FileShare.Read),
-                    CompressionMode.Decompress); ;
-                    sourceStrem.Position = position;
-                    sizeInStream = 0;
-
-                }
-                _semaphoreCheckReadInputStream.Release();
-            }
+            return new GZipStream(new FileStream(_pathSourceFile, FileMode.Open, FileAccess.Read, FileShare.Read),
+                CompressionMode.Decompress);
         }
     }
 }
