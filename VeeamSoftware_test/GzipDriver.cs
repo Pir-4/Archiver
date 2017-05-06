@@ -20,6 +20,7 @@ namespace VeeamSoftware_test.Gzip
         private static Thread[] _threads;
         private static int _processCount;
         static Semaphore _semaphoreWrite = new Semaphore(0, Int32.MaxValue);
+        static Semaphore _semaphoreWrite2 = new Semaphore(0, 1);
         static Semaphore _semaphoreRead = new Semaphore(10, 3000);
 
         static object _lockerWrite = new object();
@@ -30,24 +31,41 @@ namespace VeeamSoftware_test.Gzip
         private const int _bufferSize = 1024*1024*1024;
         private static Exception exception;
 
-        public static void ModificationOfData(Stream sourceStrem, Stream outputStream)
+        private static Stream sourceStrem;
+        private static Stream outputStream;
+
+        private static string sourceFile;
+        private static string outputFile;
+
+        private static long sizeOutStream;
+
+        public static void ModificationOfData(string pathSourceFile, string pathOutputFile)
         {
+            sourceFile = pathSourceFile;
+            outputFile = pathOutputFile;
+
              _processCount = Environment.ProcessorCount > 2 ? Environment.ProcessorCount : 2;
+
             Thread [] _threads = new Thread[_processCount];
 
             try
             {
+                sourceStrem = new FileStream(pathSourceFile,FileMode.Open,FileAccess.Read,FileShare.Read);
+                outputStream = new GZipStream(new FileStream(pathOutputFile, FileMode.Create, FileAccess.Write,FileShare.Read),CompressionMode.Compress);
+
+               // tmp(outputStream);
+
                 for (int i = 0; i < _processCount; i++)
                 {
                     if (i%2 == 0)
                     {
                         _threads[i] = new Thread(Write);
-                        _threads[i].Start(outputStream);
+                        _threads[i].Start();
                     }
                     else
                     {
                         _threads[i] = new Thread(Read);
-                        _threads[i].Start(sourceStrem);
+                        _threads[i].Start();
                     }
 
                 }
@@ -62,6 +80,9 @@ namespace VeeamSoftware_test.Gzip
             {
                 for (int i = 0; i < _processCount; i++)
                     _threads[i].Join();
+
+                sourceStrem.Close();
+                outputStream.Close();
             }
 
             if (exception != null)
@@ -79,12 +100,10 @@ namespace VeeamSoftware_test.Gzip
             }
         }
 
-        private static void Read(Object obj)
+        private static void Read()
         {
             try
             {
-                Stream sourceStrem = obj as Stream; 
-
                 while (true)
                 {
                     _semaphoreRead.WaitOne();
@@ -109,18 +128,18 @@ namespace VeeamSoftware_test.Gzip
                 exception = e;
             }
         }
-        private static void Write(Object obj)
+        private static void Write()
         {
             try
             {
-                Stream outStream = obj as Stream;
                 while (true)
                 {
                     _semaphoreWrite.WaitOne();
-                    byte[] buffer;
+                    chechkOutstream();
+                    _semaphoreWrite2.WaitOne();
                     lock (_lockerWrite)
                     {
-                        buffer = _queue.Dequeue();
+                        byte[] buffer = _queue.Dequeue();
 
                         if (buffer == null)
                         {
@@ -128,7 +147,7 @@ namespace VeeamSoftware_test.Gzip
                             break;
                         }
 
-                        outStream.Write(buffer, 0, buffer.Length);
+                        outputStream.Write(buffer, 0, buffer.Length);
                         _semaphoreRead.Release();
                     }
                 }
@@ -141,5 +160,36 @@ namespace VeeamSoftware_test.Gzip
             
 
         }
+
+        private static void chechkOutstream()
+        {
+            lock (_lockerWrite)
+            {
+                long size = _queue.Peek().Length;
+                if (sizeOutStream + size >= 1294967296)
+                {
+                    outputStream.Close();
+                    outputStream = new GZipStream(new FileStream(outputFile, FileMode.Append, FileAccess.Write, FileShare.Read), CompressionMode.Compress);
+                    sizeOutStream = 0;
+                }
+                sizeOutStream += size;
+                _semaphoreWrite2.Release();
+            }
+            
+        }
+
+        private static void tmp(Stream str)
+        {
+            for (int i = 0; i < 2; i++)
+            {
+                using (var testStream = new FileStream(@"E:\education\programs\Bolshoy_kush_HDRip_[scarabey.org]_by_Scarabey.avi", FileMode.Open, FileAccess.Read))
+                {
+                    byte[] buffer = new byte[testStream.Length];
+                    testStream.Read(buffer, 0, buffer.Length);
+                    str.Write(buffer, 0, buffer.Length);
+                }
+            }
+           
+        } 
     }
 }
