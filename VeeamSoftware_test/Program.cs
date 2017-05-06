@@ -70,20 +70,18 @@ namespace VeeamSoftware_test
                         "- for decompression: GZipTest.exe decompress [archive file name] [decompressed file name]");
                 throw new ArgumentException(sb.ToString());
             }
-
-            IGZipManager result = GZipManager.create(argv[0]);
             
-            if(result == null)
-                throw new ArgumentException(String.Format("Please use \"{0}\" and \"{1}\" commands only as the first parameter.", GZipManager.Compress,GZipManager.Decompress));
-
             if(!File.Exists(argv[1]))
                 throw new ArgumentException("Please enter correct source file name.");
 
             if (!Directory.Exists(Path.GetDirectoryName(argv[2])))
                 throw new ArgumentException("Please enter correct directory output file.");
 
-            result.SourceFile = argv[1];
-            result.ResultFile = argv[2];
+            IGZipManager result = GZipManager.create(argv[0], argv[1], argv[2]);
+
+            if (result == null)
+                throw new ArgumentException(String.Format("Please use \"{0}\" and \"{1}\" commands only as the first parameter.", GZipManager.Compress, GZipManager.Decompress));
+
 
             return result;
 

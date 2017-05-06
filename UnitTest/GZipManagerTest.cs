@@ -21,12 +21,12 @@ namespace UnitTest
             string output = @"E:\education\programs\test22.txt";
             string input = @"E:\education\programs\test.gzip";
 
-            IGZipManager zip = new GZipManagerCompress();
+            IGZipManager zip = null;//new GZipManagerCompress();
             zip.SourceFile = input_1;
             zip.ResultFile = input;
             zip.Execute();
 
-            zip = new GZipManagerDecompress();
+            //zip;// new GZipManagerDecompress();
             zip.SourceFile = input;
             zip.ResultFile = output;
             zip.Execute();
@@ -46,12 +46,12 @@ namespace UnitTest
             string output = @"E:\education\programs\test22.txt";
             string input = @"E:\education\programs\test.gzip";
 
-            IGZipManager zip = new GZipManagerCompress();
+            IGZipManager zip = null; //new GZipManagerCompress();
             zip.SourceFile = input_1;
             zip.ResultFile = input;
             zip.Execute();
 
-            zip = new GZipManagerDecompress();
+           // zip = new GZipManagerDecompress();
             zip.SourceFile = input;
             zip.ResultFile = output;
             zip.Execute();
