@@ -29,8 +29,8 @@ namespace VeeamSoftware_test.Gzip
             if (act.ToLower().Equals(Compress))
                 return new GZipManagerCompress();
 
-            if (act.ToLower().Equals(Decompress))
-                return new GZipManagerDecompress();
+            /*if (act.ToLower().Equals(Decompress))
+                return new GZipManagerDecompress();*/
 
             return null;
         }
@@ -52,23 +52,25 @@ namespace VeeamSoftware_test.Gzip
     {
         public override void Execute( )
         {
-                using (var sourceStream = new FileStream(SourceFile, FileMode.Open, FileAccess.Read))
-                {
-                    using (var outStream = new FileStream(ResultFile, FileMode.Create, FileAccess.Write))
-                    {
-                        using (var gZipStream = new GZipStream(outStream, CompressionMode.Compress))
-                        {
-                            GzipDriver.ModificationOfData(sourceStream, gZipStream);
-                        }
-                    }
-                }
+            /* using (var sourceStream = new FileStream(SourceFile, FileMode.Open, FileAccess.Read))
+             {
+                 using (var outStream = new FileStream(ResultFile, FileMode.Create, FileAccess.Write))
+                 {
+                     using (var gZipStream = new GZipStream(outStream, CompressionMode.Compress))
+                     {
+                         GzipDriver.ModificationOfData(sourceStream, gZipStream);
+                     }
+                 }
+             }*/
+
+            GzipDriver.ModificationOfData(SourceFile, ResultFile);
         }
         public override string Act
         {
             get { return Compress; } 
         }
     }
-    public class GZipManagerDecompress : GZipManager
+   /* public class GZipManagerDecompress : GZipManager
     {
         public override void Execute()
         {
@@ -87,5 +89,5 @@ namespace VeeamSoftware_test.Gzip
         {
             get { return Decompress; }
         }
-    }
+    }*/
 }
