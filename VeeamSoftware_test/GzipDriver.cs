@@ -14,11 +14,9 @@ namespace VeeamSoftware_test.Gzip
     public abstract class GzipDriver
     {
         private Queue<byte[]> _queue = new Queue<byte[]>();
-
         
         private Semaphore _semaphoreWrite = new Semaphore(0, Int32.MaxValue);
         private Semaphore _semaphoreCheckWriteOutputStream = new Semaphore(0, 1);
-
         
         private Semaphore _semaphoreRead = new Semaphore(10, 3000);
         private Semaphore _semaphoreCheckReadInputStream = new Semaphore(0, 1);
@@ -50,7 +48,7 @@ namespace VeeamSoftware_test.Gzip
 
         public void Run()
         {
-           int  _processCount = Environment.ProcessorCount > 2 ? Environment.ProcessorCount : 2;
+            int _processCount = Environment.ProcessorCount > 2 ? Environment.ProcessorCount : 2;
             Thread[] _threads = new Thread[_processCount];
 
             try
@@ -183,7 +181,7 @@ namespace VeeamSoftware_test.Gzip
             _semaphoreRead.WaitOne();
             lock (_lockerRead)
             {
-                if (_sizeMemorySourceStream + _bufferSize >= 1294967296)
+                if (_sizeMemorySourceStream + _bufferSize >= _maxSizeStream)
                 {
                     long position = _sourceStream.Position;
                     _sourceStream.Close();

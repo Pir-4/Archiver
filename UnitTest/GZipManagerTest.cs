@@ -16,52 +16,44 @@ namespace UnitTest
         [TestMethod]
         public void CompressFileAndDecompressToFile()
         {
-            string input_1 = @"E:\education\programs\test\testttt\dfdf.txt";
+            string inputFile = @"E:\education\programs\test\testttt\dfdf.txt";
 
-            string output = @"E:\education\programs\test22.txt";
-            string input = @"E:\education\programs\test.gzip";
+            string outputfile = @"E:\education\programs\test22.txt";
+            string gzip = @"E:\education\programs\test.gzip";
 
-            IGZipManager zip = null;//new GZipManagerCompress();
-            zip.SourceFile = input_1;
-            zip.ResultFile = input;
+            IGZipManager zip = new GZipManagerCompress(inputFile, gzip);
             zip.Execute();
 
-            //zip;// new GZipManagerDecompress();
-            zip.SourceFile = input;
-            zip.ResultFile = output;
+            zip = new GZipManagerDecompress(gzip, outputfile);
             zip.Execute();
 
-            FileInfo Etalon = new FileInfo(input_1);
-            FileInfo create = new FileInfo(output);
+            FileInfo Etalon = new FileInfo(inputFile);
+            FileInfo create = new FileInfo(outputfile);
             Assert.IsTrue(Etalon.Length == create.Length);
 
-            File.Delete(output);
-            File.Delete(input);
+            File.Delete(outputfile);
+            File.Delete(gzip);
         }
         [TestMethod]
         public void CompressFileAndDecompressToFatFile()
         {
-            string input_1 = @"E:\education\programs\TonarinoTotoro.mkv";
+            string inputFile = @"E:\education\programs\programs.rar";
 
-            string output = @"E:\education\programs\test22.txt";
-            string input = @"E:\education\programs\test.gzip";
+            string outputfile = @"E:\education\programs\test22.txt";
+            string gzip = @"E:\education\programs\test.gzip";
 
-            IGZipManager zip = null; //new GZipManagerCompress();
-            zip.SourceFile = input_1;
-            zip.ResultFile = input;
+            IGZipManager zip = new GZipManagerCompress(inputFile, gzip);
             zip.Execute();
 
-           // zip = new GZipManagerDecompress();
-            zip.SourceFile = input;
-            zip.ResultFile = output;
+            zip = new GZipManagerDecompress(gzip, outputfile);
             zip.Execute();
 
-            FileInfo Etalon = new FileInfo(input_1);
-            FileInfo create = new FileInfo(output);
+            FileInfo Etalon = new FileInfo(inputFile);
+            FileInfo create = new FileInfo(outputfile);
             Assert.IsTrue(Etalon.Length == create.Length);
 
-            File.Delete(output);
-            File.Delete(input);
+            File.Delete(outputfile);
+            File.Delete(gzip);
         }
     }
 }

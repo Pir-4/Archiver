@@ -11,8 +11,6 @@ namespace VeeamSoftware_test.Gzip
     public interface IGZipManager
     {
         void Execute();
-        string SourceFile { get; set; }
-        string ResultFile { get; set; }
         string Act { get; }
     }
 
@@ -21,10 +19,8 @@ namespace VeeamSoftware_test.Gzip
         public const string Compress = "compress";
         public const string Decompress = "decompress";
 
-        private string sourceFile;
-        private string resultFile;
-        protected GzipDriver driver;
-        private string act;
+        protected GzipDriver _driver;
+        private string _act;
 
         public static IGZipManager create(string act, string inputFile, string outputfile)
         {
@@ -40,16 +36,7 @@ namespace VeeamSoftware_test.Gzip
         }
         public void Execute()
         {
-            driver.Run();
-        }
-        public string SourceFile
-        {
-            get { return sourceFile; }
-            set { sourceFile = value; }
-        }
-        public string ResultFile {
-            get { return resultFile; }
-            set { resultFile = value; }
+            _driver.Run();
         }
         public abstract string Act { get; }
     }
@@ -58,7 +45,7 @@ namespace VeeamSoftware_test.Gzip
     {
         public GZipManagerCompress(string inputFile, string outputfile)
         {
-            driver = new GzipDriverCompress(inputFile, outputfile);
+            _driver = new GzipDriverCompress(inputFile, outputfile);
         }
         public override string Act
         {
@@ -69,7 +56,7 @@ namespace VeeamSoftware_test.Gzip
     {
         public GZipManagerDecompress(string inputFile, string outputfile)
         {
-            driver = new GzipDriverDecompress(inputFile, outputfile);
+            _driver = new GzipDriverDecompress(inputFile, outputfile);
         }
         public override string Act
         {
