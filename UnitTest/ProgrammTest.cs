@@ -26,8 +26,8 @@ namespace UnitTest
         [TestMethod]
         public void BadParametersArgv()
         {
-            Assert.IsTrue(Program.Main(new string[] { "compresss", "", "" }).Equals(1));
-            Assert.IsTrue(Program.Main(new string[] { "decompresss", "", "" }).Equals(1));
+            Assert.IsTrue(Program.Main(new string[] { "To_compress", "", "" }).Equals(1));
+            Assert.IsTrue(Program.Main(new string[] { "To_decompress", "", "" }).Equals(1));
         }
         [TestMethod]
         public void NotCorretSourceFileNameArgv()
