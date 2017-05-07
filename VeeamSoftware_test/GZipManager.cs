@@ -12,6 +12,8 @@ namespace VeeamSoftware_test.Gzip
     {
         void Execute();
         string Act { get; }
+        string SourceFile { get;}
+        string ResultFile { get;}
     }
 
     public abstract class GZipManager : IGZipManager
@@ -22,10 +24,11 @@ namespace VeeamSoftware_test.Gzip
         protected GzipDriver _driver;
         private string _act;
 
+        private string _sourceFile;
+        private string _resultFile;
+
         public static IGZipManager create(string act, string inputFile, string outputfile)
         {
-            GZipManager manager = null;
-
             if (act.ToLower().Equals(Compress))
                 return new GZipManagerCompress(inputFile, outputfile);
 
@@ -34,16 +37,33 @@ namespace VeeamSoftware_test.Gzip
 
             return null;
         }
+
+        public GZipManager(string inputFile, string outputfile)
+        {
+            SourceFile = inputFile;
+            ResultFile = outputfile;
+        }
         public void Execute()
         {
             _driver.Run();
         }
         public abstract string Act { get; }
+
+        public string SourceFile
+        {
+            get { return _sourceFile; }
+            private set { _sourceFile = value; }
+        }
+        public string ResultFile
+        {
+            get { return _resultFile; }
+            private set { _resultFile = value; }
+        }
     }
 
     public class GZipManagerCompress : GZipManager
     {
-        public GZipManagerCompress(string inputFile, string outputfile)
+        public GZipManagerCompress(string inputFile, string outputfile) : base( inputFile, outputfile)
         {
             _driver = new GzipDriverCompress(inputFile, outputfile);
         }
@@ -54,7 +74,7 @@ namespace VeeamSoftware_test.Gzip
     }
     public class GZipManagerDecompress : GZipManager
     {
-        public GZipManagerDecompress(string inputFile, string outputfile)
+        public GZipManagerDecompress(string inputFile, string outputfile) : base(inputFile, outputfile)
         {
             _driver = new GzipDriverDecompress(inputFile, outputfile);
         }

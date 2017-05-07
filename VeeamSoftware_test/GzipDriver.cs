@@ -166,7 +166,8 @@ namespace VeeamSoftware_test.Gzip
             _semaphoreWrite.WaitOne();
             lock (_lockerWrite)
             {
-                if (_sizeMemorySizeOutStream + _queue.Peek().Length >= _maxSizeStream)
+                if (_queue.Peek() != null && 
+                    _sizeMemorySizeOutStream + _queue.Peek().Length >= _maxSizeStream)
                 {
                     _outputStream.Close();
                     _outputStream = GetOutputStream();
