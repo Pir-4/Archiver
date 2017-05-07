@@ -48,7 +48,7 @@ namespace VeeamSoftware_test.Gzip
             _pathOutputFile = pathPathOutputFile;
         }
 
-        public void ModificationOfData()
+        public void Run()
         {
            int  _processCount = Environment.ProcessorCount > 2 ? Environment.ProcessorCount : 2;
             Thread[] _threads = new Thread[_processCount];

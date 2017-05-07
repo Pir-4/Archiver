@@ -16,14 +16,14 @@ namespace VeeamSoftware_test.Gzip
         string Act { get; }
     }
 
-    public class GZipManager : IGZipManager
+    public abstract class GZipManager : IGZipManager
     {
         public const string Compress = "compress";
         public const string Decompress = "decompress";
 
         private string sourceFile;
         private string resultFile;
-        private GzipDriver driver;
+        protected GzipDriver driver;
         private string act;
 
         public static IGZipManager create(string act, string inputFile, string outputfile)
@@ -31,27 +31,16 @@ namespace VeeamSoftware_test.Gzip
             GZipManager manager = null;
 
             if (act.ToLower().Equals(Compress))
-            {
-                manager =  new GZipManager(new GzipDriverCompress(inputFile, outputfile));
-                manager.Act = Compress;
-            }
+                return new GZipManagerCompress(inputFile, outputfile);
 
             if (act.ToLower().Equals(Decompress))
-            {
-                manager =  new GZipManager(new GzipDriverDecompress(inputFile, outputfile));
-                manager.Act = Decompress;
-            }
+                return new GZipManagerDecompress(inputFile, outputfile);
 
-            return manager;
-        }
-
-        private GZipManager(GzipDriver driver)
-        {
-            this.driver = driver;
+            return null;
         }
         public void Execute()
         {
-            driver.ModificationOfData();
+            driver.Run();
         }
         public string SourceFile
         {
@@ -62,10 +51,29 @@ namespace VeeamSoftware_test.Gzip
             get { return resultFile; }
             set { resultFile = value; }
         }
-        public  string Act
+        public abstract string Act { get; }
+    }
+
+    public class GZipManagerCompress : GZipManager
+    {
+        public GZipManagerCompress(string inputFile, string outputfile)
         {
-            get { return act; }
-            set { act = value; }
+            driver = new GzipDriverCompress(inputFile, outputfile);
+        }
+        public override string Act
+        {
+            get { return Compress; }
+        }
+    }
+    public class GZipManagerDecompress : GZipManager
+    {
+        public GZipManagerDecompress(string inputFile, string outputfile)
+        {
+            driver = new GzipDriverDecompress(inputFile, outputfile);
+        }
+        public override string Act
+        {
+            get { return Decompress; }
         }
     }
 
