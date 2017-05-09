@@ -17,17 +17,21 @@ namespace VeeamSoftware_test.Gzip
     public abstract class GzipDriver : IGzipDriver
     {
         protected const long BlockSize = 10*1024*1024;
-        protected readonly int TreadCount;
+        protected readonly int ThreadCount;
         protected const int MaxQueueSize = 10;
 
         private readonly Thread sourceThread;
         private readonly Thread outputThread;
 
+        protected readonly ThreadDispatcher _threadDispatcher;
+
         protected GzipDriver()
         {
-            TreadCount = Environment.ProcessorCount;
+            ThreadCount = Environment.ProcessorCount;
             sourceThread = new Thread(ReadStream);
             outputThread = new Thread(WriteStream);
+
+            _threadDispatcher = new ThreadDispatcher(ThreadCount);
         }
         public void Execute(string inputPath, string outputPath)
         {
