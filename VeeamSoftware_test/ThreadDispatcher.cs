@@ -9,8 +9,10 @@ namespace VeeamSoftware_test
    public class ThreadDispatcher
    {
        private readonly Semaphore semaphore;
+        private int currentThreads = 0;
+        private object _lock = new object();
 
-       public ThreadDispatcher(int countThreads)
+        public ThreadDispatcher(int countThreads)
        {
            semaphore = new Semaphore(countThreads,countThreads);
        }
@@ -18,7 +20,13 @@ namespace VeeamSoftware_test
        public void Start(Action threadAction)
        {
            semaphore.WaitOne();
-           Thread thread = new Thread(ExceuteThread);
+           Thread thread;
+           lock (_lock)
+           {
+                thread = new Thread(ExceuteThread);
+                Interlocked.Increment(ref currentThreads);
+            }
+           
             thread.Start(threadAction);
        }
 
@@ -28,7 +36,17 @@ namespace VeeamSoftware_test
            if (act is Action)
                (act as Action)();
 
-            semaphore.Release();
+           lock (_lock)
+           {
+                semaphore.Release();
+                Interlocked.Decrement(ref currentThreads);
+            }
+           
         }
+
+       public bool isEmpty
+       {
+           get { return currentThreads == 0; }
+       }
    }
 }
