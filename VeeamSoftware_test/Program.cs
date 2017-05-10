@@ -49,6 +49,13 @@ namespace VeeamSoftware_test
 
                 Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion started. Input file: {1}", manager.Act, manager.SourceFile));
                 manager.Execute();
+                if (manager.Exceptions().Count != 0)
+                {
+                    foreach (var ex in manager.Exceptions())
+                        Console.WriteLine(String.Format(CultureInfo.InvariantCulture,
+                            "Error:\n Message: {0} \n StackTrace:\n {1}\n", ex.Message, ex.StackTrace));
+                    return 1;
+                }
                 Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion completed. Output file: {1}", manager.Act, manager.ResultFile));
             }
             catch (Exception e)

@@ -14,6 +14,7 @@ namespace VeeamSoftware_test.Gzip
         string Act { get; }
         string SourceFile { get;}
         string ResultFile { get;}
+        List<Exception> Exceptions();
     }
 
     public abstract class GZipManager : IGZipManager
@@ -45,7 +46,11 @@ namespace VeeamSoftware_test.Gzip
         }
         public void Execute()
         {
-            _driver.Run();
+            _driver.Execute(SourceFile, ResultFile);
+        }
+        public List<Exception> Exceptions()
+        {
+            return _driver.Exceptions;
         }
         public abstract string Act { get; }
 
@@ -65,7 +70,7 @@ namespace VeeamSoftware_test.Gzip
     {
         public GZipManagerCompress(string inputFile, string outputfile) : base( inputFile, outputfile)
         {
-            _driver = new GzipDriverCompress(inputFile, outputfile);
+            _driver = new GzipDriverCompress();
         }
         public override string Act
         {
@@ -76,7 +81,7 @@ namespace VeeamSoftware_test.Gzip
     {
         public GZipManagerDecompress(string inputFile, string outputfile) : base(inputFile, outputfile)
         {
-            _driver = new GzipDriverDecompress(inputFile, outputfile);
+            _driver = new GzipDriverDecompress();
         }
         public override string Act
         {
