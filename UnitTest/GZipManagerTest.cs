@@ -23,9 +23,11 @@ namespace UnitTest
 
             IGZipManager zip = new GZipManagerCompress(inputFile, gzip);
             zip.Execute();
+            Assert.IsTrue(zip.Exceptions().Count == 0);
 
             zip = new GZipManagerDecompress(gzip, outputfile);
             zip.Execute();
+            Assert.IsTrue(zip.Exceptions().Count == 0);
 
             FileInfo Etalon = new FileInfo(inputFile);
             FileInfo create = new FileInfo(outputfile);
@@ -44,9 +46,11 @@ namespace UnitTest
 
             IGZipManager zip = new GZipManagerCompress(inputFile, gzip);
             zip.Execute();
+            Assert.IsTrue(zip.Exceptions().Count == 0);
 
             zip = new GZipManagerDecompress(gzip, outputfile);
             zip.Execute();
+            Assert.IsTrue(zip.Exceptions().Count == 0);
 
             FileInfo Etalon = new FileInfo(inputFile);
             FileInfo create = new FileInfo(outputfile);
