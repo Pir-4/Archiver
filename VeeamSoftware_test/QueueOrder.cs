@@ -13,10 +13,10 @@ namespace VeeamSoftware_test
     /// <typeparam name="T">Тип элементов в очереди</typeparam>
     public class QueueOrder<T>
     {
-        private Dictionary<QueuOrder, T> queueDictionary = new Dictionary<QueuOrder, T>();
-        private Dictionary<int, int> subOrderLimits = new Dictionary<int, int>();
-        private int currentOrder;
-        private int currentsubOrder;
+        private Dictionary<QueuOrder, T> _queueDictionary = new Dictionary<QueuOrder, T>();
+        private Dictionary<int, int> _subOrderLimits = new Dictionary<int, int>();
+        private int _currentOrder;
+        private int _currentSubOrder;
         private readonly object _lock = new object();
 
         /// <summary>
@@ -33,9 +33,9 @@ namespace VeeamSoftware_test
             {
                 QueuOrder queuOrder = new QueuOrder(order, subOrder);
                 if (lastSubOrder)
-                    subOrderLimits[order] = subOrder;
+                    _subOrderLimits[order] = subOrder;
 
-                queueDictionary.Add(queuOrder, item);
+                _queueDictionary.Add(queuOrder, item);
             }
         }
         /// <summary>
@@ -58,18 +58,18 @@ namespace VeeamSoftware_test
 
             lock (_lock)
             {
-                QueuOrder queuOrder = new QueuOrder(currentOrder, currentsubOrder);
-                if (queueDictionary.TryGetValue(queuOrder, out item))
+                QueuOrder queuOrder = new QueuOrder(_currentOrder, _currentSubOrder);
+                if (_queueDictionary.TryGetValue(queuOrder, out item))
                 {
-                    queueDictionary.Remove(queuOrder);
-                    if (subOrderLimits.ContainsKey(currentOrder) && currentsubOrder == subOrderLimits[currentOrder])
+                    _queueDictionary.Remove(queuOrder);
+                    if (_subOrderLimits.ContainsKey(_currentOrder) && _currentSubOrder == _subOrderLimits[_currentOrder])
                     {
-                        Interlocked.Increment(ref currentOrder);
-                        currentsubOrder = 0;
+                        Interlocked.Increment(ref _currentOrder);
+                        _currentSubOrder = 0;
                     }
                     else
                     {
-                        Interlocked.Increment(ref currentsubOrder);
+                        Interlocked.Increment(ref _currentSubOrder);
                     }
                     return true;
                 }
@@ -79,7 +79,7 @@ namespace VeeamSoftware_test
         }
         public int Size
         {
-            get { return queueDictionary.Count; }
+            get { return _queueDictionary.Count; }
         }
         /// <summary>
         /// Составной порядковый элемент в очереди

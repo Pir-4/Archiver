@@ -15,14 +15,14 @@ namespace VeeamSoftware_test
         /// <summary>
         /// Счетчик запущенных потоков
         /// </summary>
-        private int currentThreads;
-        private readonly Semaphore semaphore;
+        private int _countCurrentThreads;
+        private readonly Semaphore _semaphore;
         
         private object _lock = new object();
 
         public ThreadDispatcher(int countThreads)
        {
-           semaphore = new Semaphore(countThreads,countThreads);
+           _semaphore = new Semaphore(countThreads,countThreads);
        }
         /// <summary>
         /// Выполнить действие в отдельном потоке.
@@ -32,12 +32,12 @@ namespace VeeamSoftware_test
         /// <param name="threadAction">Выполняемое действие</param>
         public void Start(Action threadAction)
        {
-           semaphore.WaitOne();
+           _semaphore.WaitOne();
            Thread thread;
            lock (_lock)
            {
                 thread = new Thread(ExceuteThread);
-                Interlocked.Increment(ref currentThreads);
+                Interlocked.Increment(ref _countCurrentThreads);
             }
            
             thread.Start(threadAction);
@@ -51,15 +51,15 @@ namespace VeeamSoftware_test
 
            lock (_lock)
            {
-                semaphore.Release();
-                Interlocked.Decrement(ref currentThreads);
+                _semaphore.Release();
+                Interlocked.Decrement(ref _countCurrentThreads);
             }
            
         }
 
        public bool isEmpty
        {
-           get { return currentThreads == 0; }
+           get { return _countCurrentThreads == 0; }
        }
    }
 }
