@@ -8,6 +8,13 @@ namespace VeeamSoftware_test
 {
     public static class StreamExtensions
     {
+        /// <summary>
+        /// Метод возвращает первое вхождение указанного массива байтов в потоке
+        /// </summary>
+        /// <param name="inputStream">Поток байтов</param>
+        /// <param name="block">Массив байтов</param>
+        /// <param name="readBlockSize">Размер блока для чтения потока байтов</param>
+        /// <returns>Первое вхождение указанного массива байтов</returns>
         public static long GetFirstBufferIndex(this Stream inputStream, byte[] block, int readBlockSize = 1024)
         {
             while (inputStream.Position < inputStream.Length)
@@ -57,6 +64,13 @@ namespace VeeamSoftware_test
 
             return true;
         }
+        /// <summary>
+        /// Метод возвращает массив байтов из потока в памяти.
+        /// В отличие от метода MemoryStream::GetBuffer метод при больших объемах данных 
+        /// возвращает массив байтов без нулевых байтов в конце.
+        /// </summary>
+        /// <param name="memoryStream">Поток в памяти</param>
+        /// <returns>Массив байтов</returns>
         public static byte[] GetBufferWithoutZeroTail(this MemoryStream memoryStream)
         {
             memoryStream.Position = 0;
@@ -65,6 +79,13 @@ namespace VeeamSoftware_test
             memoryStream.Read(buffer, 0, buffer.Length);
             return buffer;
         }
+
+        /// <summary>
+        /// Метод определяет начинается ли поток с указанного массива байтов.
+        /// </summary>
+        /// <param name="inputStream">Поток байтов</param>
+        /// <param name="buffer">Массив байтов</param>
+        /// <returns>Поток байтов начинается указанного массива байтов</returns>
         public static bool StartsWith(this Stream inputStream, byte[] buffer)
         {
             byte[] streamBuffer = new byte[buffer.Length];

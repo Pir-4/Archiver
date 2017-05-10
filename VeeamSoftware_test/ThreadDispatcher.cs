@@ -6,18 +6,31 @@ using System.Threading;
 
 namespace VeeamSoftware_test
 {
+    /// <summary>
+    /// Дисечер потоков.
+    /// Горантирует, что будет запущенно не более указанного количества потоков
+    /// </summary>
    public class ThreadDispatcher
    {
-       private readonly Semaphore semaphore;
+        /// <summary>
+        /// Счетчик запущенных потоков
+        /// </summary>
         private int currentThreads;
+        private readonly Semaphore semaphore;
+        
         private object _lock = new object();
 
         public ThreadDispatcher(int countThreads)
        {
            semaphore = new Semaphore(countThreads,countThreads);
        }
-
-       public void Start(Action threadAction)
+        /// <summary>
+        /// Выполнить действие в отдельном потоке.
+        /// Если было достигнуто максимальное количество потоков
+        /// планировщик блокирует вызывающий поток и ожидает завершения одного из запущенных потоков.
+        /// </summary>
+        /// <param name="threadAction">Выполняемое действие</param>
+        public void Start(Action threadAction)
        {
            semaphore.WaitOne();
            Thread thread;

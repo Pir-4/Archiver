@@ -72,6 +72,9 @@ namespace VeeamSoftware_test.Gzip
 
                             outputStream.Write(buffer, 0, buffer.Length);
                             outputStream.Flush();
+
+                            // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
+                            // необходимо вручную очистить данные буфера из Large Object Heap
                             GC.Collect();
                         }
                     }
@@ -120,10 +123,17 @@ namespace VeeamSoftware_test.Gzip
             }
 
         }
+        /// <summary>
+        /// Сжатие отдельного блока данных из входного файла
+        /// </summary>
+        /// <param name="startPosition">Смещение от начала файла</param>
+        /// <param name="blockLength">Длина блока</param>
+        /// <param name="blockIndex">Порядок блока</param>
         private void CompressBlock(long startPosition, int blockLength, int blockIndex)
         {
             try
             {
+                // Считываем массив байтов из исходного файла
                 byte[] readBuffer = new byte[blockLength];
                 using (var sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
@@ -131,6 +141,7 @@ namespace VeeamSoftware_test.Gzip
                     sourceStream.Read(readBuffer, 0, readBuffer.Length);
                 }
 
+                // Сжимаем исходный массив байтов  
                 byte[] comressBuffer;
                 lock (_locker)
                 {
@@ -146,6 +157,8 @@ namespace VeeamSoftware_test.Gzip
 
                 _bufferQueue.Enqueue(blockIndex, comressBuffer);
 
+                // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
+                // необходимо вручную очистить данные буфера из Large Object Heap 
                 GC.Collect();
             }
             catch (Exception ex)
@@ -158,6 +171,11 @@ namespace VeeamSoftware_test.Gzip
 
     public class GzipDriverDecompress : GzipDriver
     {
+        /// <summary>
+        /// Заголовок из массива байтов, который записывается с помощью GZipStream
+        /// в начало каждого сжатого блока данных.
+        /// Содержимое заголовка соответсвует RFC для формата GZip (https://www.ietf.org/rfc/rfc1952.txt).
+        /// </summary>
         private readonly byte[] gzipHeader = new byte[] { 31, 139, 8, 0, 0, 0, 0, 0, 4, 0 };
         private const int BlockSizeRead = 1024 * 1024;
 
@@ -167,6 +185,8 @@ namespace VeeamSoftware_test.Gzip
             {
                 using (var stream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
+                    // Если файл не начинается со стандартного заголовка, значит архив был создан с помощью сторонней программы.
+                    // В этом случае разбить файл на отдельные части не удастся, выполняем распаковку архива в одном потоке.
                     if (!stream.StartsWith(gzipHeader))
                     {
                         DecompressBlock(0, 0);
@@ -188,6 +208,9 @@ namespace VeeamSoftware_test.Gzip
                         int tmpBlcokIndex = blockIndex;
                         _threadDispatcher.Start(() => DecompressBlock(nextBlockIndex, tmpBlcokIndex));
                         blockIndex++;
+
+                        // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
+                        // необходимо вручную очистить данные буфера из Large Object Heap 
                         GC.Collect();
                     }
 
@@ -200,6 +223,11 @@ namespace VeeamSoftware_test.Gzip
             }
 
         }
+        /// <summary>
+        /// Декомпрессия отдельного блока данных
+        /// </summary>
+        /// <param name="startPosition">Смещение от начала файла</param>
+        /// <param name="blockIndex">Порядок блока</param>
         private void DecompressBlock(long startPosition, int blockIndex)
         {
             try

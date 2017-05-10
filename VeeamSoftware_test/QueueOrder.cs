@@ -6,6 +6,11 @@ using System.Threading;
 
 namespace VeeamSoftware_test
 {
+    /// <summary>
+    /// Упорядоченная очередь.
+    /// Для каждого эллемента указывается порядковый номер, сотоящий из основного порядка и подпорядка (если блок разбит на части)
+    /// </summary>
+    /// <typeparam name="T">Тип элементов в очереди</typeparam>
     public class QueueOrder<T>
     {
         private Dictionary<QueuOrder, T> queueDictionary = new Dictionary<QueuOrder, T>();
@@ -14,6 +19,14 @@ namespace VeeamSoftware_test
         private int currentsubOrder;
         private readonly object _lock = new object();
 
+        /// <summary>
+        /// Добавление эелмента в очередь
+        /// </summary>
+        /// <param name="order">Основной порядковый номер элемента</param>
+        /// <param name="subOrder">Второстепенный порядковый номер</param>
+        /// <param name="item">Добавляемый элемент</param>
+        /// <param name="lastSubOrder">Флаг, указывающий, что  второстепенный порядковый номер является последним
+        /// для основного порядкового номера</param>
         public void Enqueue(int order, int subOrder, T item, bool lastSubOrder = false)
         {
             lock (_lock)
@@ -25,10 +38,20 @@ namespace VeeamSoftware_test
                 queueDictionary.Add(queuOrder, item);
             }
         }
+        /// <summary>
+        /// Добавление элемента в очередь
+        /// </summary>
+        /// <param name="order">Порядковый номер жлемента</param>
+        /// <param name="item">Элемент</param>
         public void Enqueue(int order, T item)
         {
             Enqueue(order, 0, item, true);
         }
+        /// <summary>
+        /// получение элемента из очереди
+        /// </summary>
+        /// <param name="item">Полученный элемент</param>
+        /// <returns>true - успешное извлечение из очереди. false -элемент не найден</returns>
         public bool TryGetValue(out T item)
         {
             item = default(T);
@@ -58,6 +81,9 @@ namespace VeeamSoftware_test
         {
             get { return queueDictionary.Count; }
         }
+        /// <summary>
+        /// Составной порядковый элемент в очереди
+        /// </summary>
         private struct QueuOrder
         {
             public int Order;
