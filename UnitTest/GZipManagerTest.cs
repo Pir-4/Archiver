@@ -16,7 +16,7 @@ namespace UnitTest
         [TestMethod]
         public void CompressFileAndDecompressToFile()
         {
-           /* string inputFile = @"E:\education\programs\test\testttt\dfdf.txt";
+            string inputFile = @"E:\education\programs\test\testttt\dfdf.txt";
 
             string outputfile = @"E:\education\programs\test22.txt";
             string gzip = @"E:\education\programs\test.gzip";
@@ -32,12 +32,12 @@ namespace UnitTest
             Assert.IsTrue(Etalon.Length == create.Length);
 
             File.Delete(outputfile);
-            File.Delete(gzip);*/
+            File.Delete(gzip);
         }
         [TestMethod]
         public void CompressFileAndDecompressToFatFile()
         {
-            /*string inputFile = @"E:\education\programs\programs.rar";
+            string inputFile = @"E:\education\programs\programs.rar";
 
             string outputfile = @"E:\education\programs\test22.txt";
             string gzip = @"E:\education\programs\test.gzip";
@@ -53,7 +53,7 @@ namespace UnitTest
             Assert.IsTrue(Etalon.Length == create.Length);
 
             File.Delete(outputfile);
-            File.Delete(gzip);*/
+            File.Delete(gzip);
         }
     }
 }

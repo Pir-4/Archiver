@@ -13,10 +13,12 @@ namespace VeeamSoftware_test.Gzip
     public interface IGzipDriver
     {
         void Execute(string inputPath, string outputPath);
+        List<Exception> Exceptions { get; }
     }
     public abstract class GzipDriver : IGzipDriver
     {
         protected const long BlockSize = 10*1024*1024;
+
         private readonly Thread _sourceThread;
         private readonly Thread _outputThread;
 
@@ -25,7 +27,7 @@ namespace VeeamSoftware_test.Gzip
         protected List<Exception> _exceptions = new List<Exception>();
 
         protected string _soutceFilePath;
-        protected string _outputFilePath;
+        private string _outputFilePath;
 
         private static readonly AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
 
@@ -94,6 +96,7 @@ namespace VeeamSoftware_test.Gzip
     public class GzipDriverCompress : GzipDriver
     {
         private object _locker = new object();
+
         protected override void ReadStream()
         {
             try
@@ -131,7 +134,6 @@ namespace VeeamSoftware_test.Gzip
                 byte[] comressBuffer;
                 lock (_locker)
                 {
-
                     using (var memoryStream = new MemoryStream())
                     {
                         using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))

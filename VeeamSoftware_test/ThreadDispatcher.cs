@@ -9,7 +9,7 @@ namespace VeeamSoftware_test
    public class ThreadDispatcher
    {
        private readonly Semaphore semaphore;
-        private int currentThreads = 0;
+        private int currentThreads;
         private object _lock = new object();
 
         public ThreadDispatcher(int countThreads)

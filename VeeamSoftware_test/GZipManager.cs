@@ -22,7 +22,7 @@ namespace VeeamSoftware_test.Gzip
         public const string Compress = "compress";
         public const string Decompress = "decompress";
 
-        protected GzipDriver _driver;
+        protected IGzipDriver _driver;
         private string _act;
 
         private string _sourceFile;

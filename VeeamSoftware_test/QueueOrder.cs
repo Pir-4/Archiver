@@ -36,21 +36,20 @@ namespace VeeamSoftware_test
             lock (_lock)
             {
                 QueuOrder queuOrder = new QueuOrder(currentOrder, currentsubOrder);
-                if (Size == 0 || !queueDictionary.TryGetValue(queuOrder, out item))
-                    return false;
-
-                queueDictionary.Remove(queuOrder);
-                if (subOrderLimits.ContainsKey(currentOrder) && currentsubOrder == subOrderLimits[currentOrder])
+                if (queueDictionary.TryGetValue(queuOrder, out item))
                 {
-                    Interlocked.Increment(ref currentOrder);
-                    currentsubOrder = 0;
+                    queueDictionary.Remove(queuOrder);
+                    if (subOrderLimits.ContainsKey(currentOrder) && currentsubOrder == subOrderLimits[currentOrder])
+                    {
+                        Interlocked.Increment(ref currentOrder);
+                        currentsubOrder = 0;
+                    }
+                    else
+                    {
+                        Interlocked.Increment(ref currentsubOrder);
+                    }
+                    return true;
                 }
-                else
-                {
-                    Interlocked.Increment(ref currentsubOrder);
-                }
-                return true;
-
             }
 
             return false;
