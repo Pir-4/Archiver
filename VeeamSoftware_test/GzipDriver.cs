@@ -98,27 +98,29 @@ namespace VeeamSoftware_test.Gzip
 
     public class GzipDriverCompress : GzipDriver
     {
-        private object _locker = new object();
-
         protected override void ReadStream()
         {
             try
             {
-                FileStream sf = new FileStream(_soutceFilePath, FileMode.Open,FileAccess.Read,FileShare.Read, BlockSize,FileOptions.Asynchronous);
-                using (var sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BlockSize, FileOptions.Asynchronous))
+                using (Stream sourceStream =
+                        new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BlockSize,
+                            FileOptions.Asynchronous))
                 {
-                    for (int i = 0; i < (int) Math.Ceiling((double)sourceStream.Length/BlockSize); i++)
+                    for (int i = 0; i < (int) Math.Ceiling((double) sourceStream.Length/BlockSize); i++)
                     {
                         if (isBreak)
                             break;
+
                         int blockIndex = i;
                         byte[] readBuffer = new byte[BlockSize];
-                        int bytesread = sourceStream.Read(readBuffer, 0, readBuffer.Length);
+                         int bytesread = sourceStream.Read(readBuffer, 0, readBuffer.Length);
                         if (bytesread < BlockSize)
                             Array.Resize(ref readBuffer, bytesread);
+
                         _threadDispatcher.Start(() => CompressBlock(readBuffer, blockIndex));
                     }
                 }
+
             }
             catch (Exception ex)
             {
@@ -127,6 +129,7 @@ namespace VeeamSoftware_test.Gzip
             }
 
         }
+
         /// <summary>
         /// Сжатие отдельного блока данных из входного файла
         /// </summary>
