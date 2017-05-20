@@ -20,7 +20,7 @@ namespace VeeamSoftware_test
 
         private Dictionary<int, ManualResetEvent> threadsEvent;
         private Thread[] threads;
-        private List<Task> tasks;
+        private Queue<Task> tasks;
 
         private ManualResetEvent scheduleEvent;
         private Thread scheduleThread;
@@ -61,7 +61,7 @@ namespace VeeamSoftware_test
                 threads[i].Start();
             }
 
-            this.tasks = new List<Task>();
+            this.tasks = new Queue<Task>();
         }
 
         /// <summary>
@@ -88,7 +88,7 @@ namespace VeeamSoftware_test
 
         public bool isEmpty
         {
-            get { return tasks.Count == 0; }
+            get { return (tasks.Count == 0 && tasks.Where(t => !t.IsRunned).Count() == 0); }
         }
         /// <summary>
         /// Высвобождает ресурсы, которые используются пулом потоков.
@@ -120,45 +120,8 @@ namespace VeeamSoftware_test
             {
                 if (tasks.Count == 0)
                     return null;
-                    //throw new ArgumentException();
 
-                var waitingTasks = tasks.Where(t => !t.IsRunned);
-                var highTasks = waitingTasks.Where(t => t.Priority == TaskPriority.High);
-                var normalTasks = waitingTasks.Where(t => t.Priority == TaskPriority.Normal);
-
-                if (highTasks.Count() > 0)
-                {
-                    if (numberThreads >= 4)
-                    {
-                        var runnedHighTasks = tasks.Where(t => t.IsRunned && t.Priority == TaskPriority.High);
-                        var runnedNormalTasks = tasks.Where(t => t.IsRunned && t.Priority == TaskPriority.Normal);
-
-                        if (runnedHighTasks.Count() / (runnedNormalTasks.Count() + 1) < 3)
-                        {
-                            return highTasks.First();
-                        }
-                        else
-                        {
-                            return normalTasks.First();
-                        }
-                    }
-                    else
-                    {
-                        return highTasks.First();
-                    }
-                }
-                else
-                {
-                    if (normalTasks.Count() > 0)
-                    {
-                        return normalTasks.First();
-                    }
-                    else
-                    {
-                        var lowTasks = tasks.Where(t => t.Priority == TaskPriority.Low).ToArray();
-                        return lowTasks.FirstOrDefault();
-                    }
-                }
+                return tasks.Dequeue();
             }
         }
 
@@ -177,7 +140,12 @@ namespace VeeamSoftware_test
                     }
                     finally
                     {
-                        RemoveTask(task);
+                        //RemoveTask(task);
+                        if (tasks.Count > 0 && tasks.Where(t => !t.IsRunned).Count() > 0)
+                        {
+                            scheduleEvent.Set();
+                        }
+
                         if (isStoping)
                             stopEvent.Set();
                         threadsEvent[Thread.CurrentThread.ManagedThreadId].Reset();
@@ -211,7 +179,7 @@ namespace VeeamSoftware_test
         {
             lock (tasks)
             {
-                tasks.Add(task);
+                tasks.Enqueue(task);
             }
 
             scheduleEvent.Set();
@@ -219,10 +187,10 @@ namespace VeeamSoftware_test
 
         private void RemoveTask(Task task)
         {
-            lock (tasks)
+            /*lock (tasks)
             {
                 tasks.Remove(task);
-            }
+            }*/
 
             if (tasks.Count > 0 && tasks.Where(t => !t.IsRunned).Count() > 0)
             {

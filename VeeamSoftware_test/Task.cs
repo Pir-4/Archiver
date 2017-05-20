@@ -3,33 +3,11 @@
 namespace VeeamSoftware_test
 {
     /// <summary>
-    /// Приоритет выполнения задачи.
-    /// </summary>
-    public enum TaskPriority
-    {
-
-        /// <summary>
-        /// Низкий приоритет.
-        /// </summary>
-        Low,
-        /// <summary>
-        /// Средний приоритет.
-        /// </summary>
-        Normal,
-        /// <summary>
-        /// Высокий приоритет.
-        /// </summary>
-        High
-
-    }
-
-    /// <summary>
     /// Класс представляет задачу для выполнения в <see cref="FixedThreadPool"/>
     /// </summary>
     public class Task
     {
 
-        private TaskPriority priority;
         private Action work;
         private bool isRunned;
 
@@ -37,16 +15,8 @@ namespace VeeamSoftware_test
         /// Создает задачу с указанным приоритетом.
         /// </summary>
         /// <param name="work">Делегат содержащий метода для задачи.</param>
-        public Task(Action work) : this(work, TaskPriority.Normal) { }
-
-        /// <summary>
-        /// Создает задачу с указанным приоритетом.
-        /// </summary>
-        /// <param name="work">Делегат содержащий метода для задачи.</param>
-        /// <param name="priority">Приоритет задачи.</param>
-        public Task(Action work, TaskPriority priority)
+        public Task(Action work)
         {
-            this.priority = priority;
             this.work = work;
         }
 
@@ -60,17 +30,6 @@ namespace VeeamSoftware_test
                 isRunned = true;
             }
             work();
-        }
-
-        /// <summary>
-        /// Приоритет задачи. Устанавливается только при создании задачи.
-        /// </summary>
-        public TaskPriority Priority
-        {
-            get
-            {
-                return priority;
-            }
         }
 
         /// <summary>
