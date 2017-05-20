@@ -23,11 +23,14 @@ namespace VeeamSoftware_test.Gzip
         private readonly Thread _outputThread;
 
         protected readonly ThreadDispatcher _threadDispatcher;
+        protected FixedThreadPool _threadPool;
         protected QueueOrder<byte[]> _bufferQueue = new QueueOrder<byte[]>();
         protected List<Exception> _exceptions = new List<Exception>();
 
         protected string _soutceFilePath;
         private string _outputFilePath;
+
+        protected Stream sourceStream;
 
         private static readonly AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
 
@@ -40,6 +43,8 @@ namespace VeeamSoftware_test.Gzip
         }
         public void Execute(string inputPath, string outputPath)
         {
+            _threadPool = new FixedThreadPool();
+
             _soutceFilePath = inputPath;
             _outputFilePath = outputPath;
 
@@ -61,7 +66,7 @@ namespace VeeamSoftware_test.Gzip
                     FileStream outputStream = new FileStream(_outputFilePath, FileMode.Create, FileAccess.Write,
                         FileShare.Read,BlockSize,FileOptions.Asynchronous))
                 {
-                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || !_threadDispatcher.isEmpty)
+                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || !_threadPool.isEmpty /*!_threadDispatcher.isEmpty*/)
                     {
                         if (isBreak)
                             break;
@@ -87,6 +92,8 @@ namespace VeeamSoftware_test.Gzip
             }
             finally
             {
+                _threadPool.Stop();
+                sourceStream.Close();
                 _autoResetEvent.Set();
             }
         }
@@ -102,30 +109,37 @@ namespace VeeamSoftware_test.Gzip
         {
             try
             {
-                using (Stream sourceStream =
-                        new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BlockSize,
-                            FileOptions.Asynchronous))
+                sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BlockSize,
+                    FileOptions.Asynchronous);
+                List<Task> tasks = new List<Task>();
+                for (int i = 0; i < (int) Math.Ceiling((double) sourceStream.Length/BlockSize); i++)
                 {
-                    for (int i = 0; i < (int) Math.Ceiling((double) sourceStream.Length/BlockSize); i++)
-                    {
-                        if (isBreak)
-                            break;
+                    if (isBreak)
+                        break;
 
-                        int blockIndex = i;
-                        byte[] readBuffer = new byte[BlockSize];
-                         int bytesread = sourceStream.Read(readBuffer, 0, readBuffer.Length);
-                        if (bytesread < BlockSize)
-                            Array.Resize(ref readBuffer, bytesread);
+                    int blockIndex = i;
+                    byte[] readBuffer = new byte[BlockSize];
+                    int bytesread = sourceStream.Read(readBuffer, 0, readBuffer.Length);
+                    if (bytesread < BlockSize)
+                        Array.Resize(ref readBuffer, bytesread);
 
-                        _threadDispatcher.Start(() => CompressBlock(readBuffer, blockIndex));
-                    }
+                     //_threadDispatcher.Start(() => CompressBlock(readBuffer, blockIndex));
+                   //tasks.Add(new Task(() => CompressBlock(readBuffer, blockIndex), TaskPriority.Low));
+                    _threadPool.Execute(new Task(() => CompressBlock(readBuffer, blockIndex)));
                 }
+               // _threadPool.ExecuteRange(tasks);
+                
 
             }
             catch (Exception ex)
             {
 
                 _exceptions.Add(ex);
+            }
+            finally
+            {
+                
+               
             }
 
         }
@@ -151,7 +165,6 @@ namespace VeeamSoftware_test.Gzip
                     comressBuffer = memoryStream.GetBufferWithoutZeroTail();
                 }
 
-
                 _bufferQueue.Enqueue(blockIndex, comressBuffer);
 
                 // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
@@ -163,6 +176,7 @@ namespace VeeamSoftware_test.Gzip
 
                 _exceptions.Add(ex);
             }
+           
         }
     }
 

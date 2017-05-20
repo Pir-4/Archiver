@@ -62,7 +62,7 @@ namespace UnitTest
         [TestMethod]
         public void CompressFileToFatFile()
         {
-            string inputFile = @"E:\education\programs\programs.rar";
+            string inputFile = @"E:\education\programs\TonarinoTotoro.mkv";// @"E:\education\programs\programs.rar";
             string gzip = @"E:\education\programs\test.gzip";
 
             IGZipManager zip = new GZipManagerCompress(inputFile, gzip);
