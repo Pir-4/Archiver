@@ -122,14 +122,8 @@ namespace VeeamSoftware_test.Gzip
                     int bytesread = sourceStream.Read(readBuffer, 0, readBuffer.Length);
                     if (bytesread < BlockSize)
                         Array.Resize(ref readBuffer, bytesread);
-
-                     //_threadDispatcher.Start(() => CompressBlock(readBuffer, blockIndex));
-                   //tasks.Add(new Task(() => CompressBlock(readBuffer, blockIndex), TaskPriority.Low));
                     _threadPool.Execute(new Task(() => CompressBlock(readBuffer, blockIndex)));
                 }
-               // _threadPool.ExecuteRange(tasks);
-                
-
             }
             catch (Exception ex)
             {
@@ -279,6 +273,11 @@ namespace VeeamSoftware_test.Gzip
                 _exceptions.Add(ex);
             }
 
+        }
+
+        private List<long> getListPosition(Stream stream)
+        {
+            
         }
     }
 }

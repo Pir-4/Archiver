@@ -140,11 +140,8 @@ namespace VeeamSoftware_test
                     }
                     finally
                     {
-                        //RemoveTask(task);
-                        if (tasks.Count > 0 && tasks.Where(t => !t.IsRunned).Count() > 0)
-                        {
+                        if (!isEmpty)
                             scheduleEvent.Set();
-                        }
 
                         if (isStoping)
                             stopEvent.Set();
@@ -185,19 +182,6 @@ namespace VeeamSoftware_test
             scheduleEvent.Set();
         }
 
-        private void RemoveTask(Task task)
-        {
-            /*lock (tasks)
-            {
-                tasks.Remove(task);
-            }*/
-
-            if (tasks.Count > 0 && tasks.Where(t => !t.IsRunned).Count() > 0)
-            {
-                scheduleEvent.Set();
-            }
-        }
-
         /// <summary>
         /// Ставит задачу в очередь.
         /// </summary>
@@ -227,6 +211,9 @@ namespace VeeamSoftware_test
         /// <returns>Возвращает False, если хотя бы одну задачу не удалось установить.</returns>
         public bool ExecuteRange(IEnumerable<Task> tasks)
         {
+            if (tasks == null)
+                throw new ArgumentNullException("task", "The Task can't be null.");
+
             bool result = true;
             foreach (var task in tasks)
             {
