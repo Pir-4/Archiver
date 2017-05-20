@@ -17,7 +17,7 @@ namespace VeeamSoftware_test.Gzip
     }
     public abstract class GzipDriver : IGzipDriver
     {
-        protected const long BlockSize = 10*1024*1024;
+        protected const int BlockSize = 10*1024*1024;
 
         private readonly Thread _sourceThread;
         private readonly Thread _outputThread;
@@ -59,7 +59,7 @@ namespace VeeamSoftware_test.Gzip
             {
                 using (
                     FileStream outputStream = new FileStream(_outputFilePath, FileMode.Create, FileAccess.Write,
-                        FileShare.Read))
+                        FileShare.Read,BlockSize,FileOptions.Asynchronous))
                 {
                     while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || !_threadDispatcher.isEmpty)
                     {
@@ -104,7 +104,8 @@ namespace VeeamSoftware_test.Gzip
         {
             try
             {
-                using (var sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                FileStream sf = new FileStream(_soutceFilePath, FileMode.Open,FileAccess.Read,FileShare.Read, BlockSize,FileOptions.Asynchronous);
+                using (var sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BlockSize, FileOptions.Asynchronous))
                 {
                     for (int i = 0; i < (int) Math.Ceiling((double)sourceStream.Length/BlockSize); i++)
                     {
