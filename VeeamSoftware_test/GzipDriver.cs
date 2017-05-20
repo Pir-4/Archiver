@@ -104,16 +104,18 @@ namespace VeeamSoftware_test.Gzip
         {
             try
             {
-                FileInfo fileInfo = new FileInfo(_soutceFilePath);
-                for (int i = 0; i < (int)Math.Ceiling((double)fileInfo.Length / BlockSize); i++)
+                using (var sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
-                    if (isBreak)
-                        break;
-
-                    int blockIndex = i;
-                    long currentPosition = i * BlockSize;
-                    int blockLength = (int)Math.Min(BlockSize, fileInfo.Length - currentPosition);
-                    _threadDispatcher.Start(() => CompressBlock(currentPosition, blockLength, blockIndex));
+                    for (int i = 0; i < (int) Math.Ceiling((double)sourceStream.Length/BlockSize); i++)
+                    {
+                        if (isBreak)
+                            break;
+                        byte[] readBuffer = new byte[BlockSize];
+                        int bytesread = sourceStream.Read(readBuffer, 0, readBuffer.Length);
+                        if (bytesread < BlockSize)
+                            Array.Resize(ref readBuffer, bytesread);
+                        _threadDispatcher.Start(() => CompressBlock(currentPosition, blockLength, blockIndex));
+                    }
                 }
             }
             catch (Exception ex)
@@ -129,17 +131,17 @@ namespace VeeamSoftware_test.Gzip
         /// <param name="startPosition">Смещение от начала файла</param>
         /// <param name="blockLength">Длина блока</param>
         /// <param name="blockIndex">Порядок блока</param>
-        private void CompressBlock(long startPosition, int blockLength, int blockIndex)
+        private void CompressBlock(byte[] readBuffer, int blockIndex)
         {
             try
             {
                 // Считываем массив байтов из исходного файла
-                byte[] readBuffer = new byte[blockLength];
+                /*byte[] readBuffer = new byte[blockLength];
                 using (var sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
                 {
                     sourceStream.Seek(startPosition, SeekOrigin.Begin);
                     sourceStream.Read(readBuffer, 0, readBuffer.Length);
-                }
+                }*/
 
                 // Сжимаем исходный массив байтов  
                 byte[] comressBuffer;
