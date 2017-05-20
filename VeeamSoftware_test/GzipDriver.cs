@@ -110,11 +110,12 @@ namespace VeeamSoftware_test.Gzip
                     {
                         if (isBreak)
                             break;
+                        int blockIndex = i;
                         byte[] readBuffer = new byte[BlockSize];
                         int bytesread = sourceStream.Read(readBuffer, 0, readBuffer.Length);
                         if (bytesread < BlockSize)
                             Array.Resize(ref readBuffer, bytesread);
-                        _threadDispatcher.Start(() => CompressBlock(currentPosition, blockLength, blockIndex));
+                        _threadDispatcher.Start(() => CompressBlock(readBuffer, blockIndex));
                     }
                 }
             }
@@ -135,27 +136,17 @@ namespace VeeamSoftware_test.Gzip
         {
             try
             {
-                // Считываем массив байтов из исходного файла
-                /*byte[] readBuffer = new byte[blockLength];
-                using (var sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
-                {
-                    sourceStream.Seek(startPosition, SeekOrigin.Begin);
-                    sourceStream.Read(readBuffer, 0, readBuffer.Length);
-                }*/
-
                 // Сжимаем исходный массив байтов  
                 byte[] comressBuffer;
-                lock (_locker)
+                using (var memoryStream = new MemoryStream())
                 {
-                    using (var memoryStream = new MemoryStream())
+                    using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
                     {
-                        using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
-                        {
-                            gzipStream.Write(readBuffer, 0, readBuffer.Length);
-                        }
-                        comressBuffer = memoryStream.GetBufferWithoutZeroTail();
+                        gzipStream.Write(readBuffer, 0, readBuffer.Length);
                     }
+                    comressBuffer = memoryStream.GetBufferWithoutZeroTail();
                 }
+
 
                 _bufferQueue.Enqueue(blockIndex, comressBuffer);
 

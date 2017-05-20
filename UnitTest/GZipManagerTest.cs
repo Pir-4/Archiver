@@ -59,5 +59,17 @@ namespace UnitTest
             File.Delete(outputfile);
             File.Delete(gzip);
         }
+        [TestMethod]
+        public void CompressFileToFatFile()
+        {
+            string inputFile = @"E:\education\programs\programs.rar";
+            string gzip = @"E:\education\programs\test.gzip";
+
+            IGZipManager zip = new GZipManagerCompress(inputFile, gzip);
+            zip.Execute();
+            Assert.IsTrue(zip.Exceptions().Count == 0);
+
+            File.Delete(gzip);
+        }
     }
 }
