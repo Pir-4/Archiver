@@ -183,6 +183,7 @@ namespace VeeamSoftware_test.Gzip
         /// </summary>
         private readonly byte[] gzipHeader = new byte[] { 31, 139, 8, 0, 0, 0, 0, 0, 4, 0 };
         private const int BlockSizeRead = 1024 * 1024;
+        private Semaphore _readSemaphore = new Semaphore(0,Int32.MaxValue);
 
         protected override void ReadStream()
         {
