@@ -70,8 +70,7 @@ namespace VeeamSoftware_test.Gzip
                     FileStream outputStream = new FileStream(_outputFilePath, FileMode.Create, FileAccess.Write,
                         FileShare.Read, BlockSize, FileOptions.Asynchronous))
                 {
-                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || !_threadPool.isEmpty
-                        /*!_threadDispatcher.isEmpty*/)
+                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || !_threadPool.isEmpty)
                     {
                         if (isBreak)
                             break;
@@ -170,6 +169,10 @@ namespace VeeamSoftware_test.Gzip
                 // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
                 // необходимо вручную очистить данные буфера из Large Object Heap 
                 GC.Collect();
+            }
+            catch (ThreadAbortException)
+            {
+                ;
             }
             catch (Exception ex)
             {
@@ -274,6 +277,10 @@ namespace VeeamSoftware_test.Gzip
                 }
 
 
+            }
+            catch (ThreadAbortException)
+            {
+                ;
             }
             catch (Exception ex)
             {

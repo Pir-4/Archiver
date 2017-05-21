@@ -21,6 +21,7 @@ namespace VeeamSoftware_test
         private Dictionary<int, ManualResetEvent> threadsEvent;
         private Thread[] threads;
         private Queue<Task> tasks;
+        private int currentCountTreads;
 
         private ManualResetEvent scheduleEvent;
         private Thread scheduleThread;
@@ -52,14 +53,6 @@ namespace VeeamSoftware_test
 
             this.threads = new Thread[numberThreads];
             this.threadsEvent = new Dictionary<int, ManualResetEvent>(numberThreads);
-
-            for (int i = 0; i < numberThreads; i++)
-            {
-                threads[i] = new Thread(ThreadWork) { Name = "Pool Thread", IsBackground = true };
-                threadsEvent.Add(threads[i].ManagedThreadId, new ManualResetEvent(false));
-
-                threads[i].Start();
-            }
 
             this.tasks = new Queue<Task>();
         }
@@ -102,11 +95,16 @@ namespace VeeamSoftware_test
                 {
                     scheduleThread.Abort();
                     scheduleEvent.Close();
-
-                    for (int i = 0; i < numberThreads; i++)
+                    lock (threads)
                     {
-                        threads[i].Abort();
-                        threadsEvent[threads[i].ManagedThreadId].Close();
+                        for (int i = 0; i < numberThreads; i++)
+                        {
+                            if (threads[i] != null)
+                            {
+                                threads[i].Abort();
+                                threadsEvent[threads[i].ManagedThreadId].Close();
+                            }
+                        }
                     }
                 }
 
@@ -178,8 +176,23 @@ namespace VeeamSoftware_test
             {
                 tasks.Enqueue(task);
             }
-
+            CreateThread();
             scheduleEvent.Set();
+        }
+
+        private void CreateThread()
+        {
+            lock (threads)
+            {
+                if (currentCountTreads < numberThreads)
+                {
+                    threads[currentCountTreads] = new Thread(ThreadWork) {Name = "Pool Thread " + currentCountTreads.ToString(), IsBackground = true};
+                    threadsEvent.Add(threads[currentCountTreads].ManagedThreadId, new ManualResetEvent(false));
+
+                    threads[currentCountTreads].Start();
+                    Interlocked.Increment(ref currentCountTreads);
+                }
+            }
         }
 
         /// <summary>
