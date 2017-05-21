@@ -23,7 +23,6 @@ namespace VeeamSoftware_test.Gzip
         private readonly Thread _sourceThread;
         private readonly Thread _outputThread;
 
-        protected readonly ThreadDispatcher _threadDispatcher;
         protected FixedThreadPool _threadPool;
         protected QueueOrder<byte[]> _bufferQueue = new QueueOrder<byte[]>();
         protected List<Exception> _exceptions = new List<Exception>();
@@ -41,13 +40,12 @@ namespace VeeamSoftware_test.Gzip
             _sourceThread = new Thread(ReadStream);
             _outputThread = new Thread(WriteStream);
 
-            _threadDispatcher = new ThreadDispatcher(Environment.ProcessorCount);
+            _threadPool = new FixedThreadPool();
+
         }
 
         public void Execute(string inputPath, string outputPath)
         {
-            _threadPool = new FixedThreadPool();
-
             _soutceFilePath = inputPath;
             _outputFilePath = outputPath;
 
@@ -137,11 +135,6 @@ namespace VeeamSoftware_test.Gzip
 
                 _exceptions.Add(ex);
             }
-            finally
-            {
-
-
-            }
 
         }
 
@@ -168,6 +161,7 @@ namespace VeeamSoftware_test.Gzip
 
                 _bufferQueue.Enqueue(blockIndex, comressBuffer);
                 _writeResetEvent.Set();
+
                 // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
                 // необходимо вручную очистить данные буфера из Large Object Heap 
                 GC.Collect();
