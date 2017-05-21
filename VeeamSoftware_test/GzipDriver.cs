@@ -309,5 +309,23 @@ namespace VeeamSoftware_test.Gzip
             GC.Collect();
             return result;
         }
+
+        private int getReadBuffer(long startPosition, long bais, out byte[] buffer)
+        {
+            lock (sourceStream)
+            {
+                long seek = startPosition + bais;
+                sourceStream.Seek(seek, SeekOrigin.Begin);
+                int bytesread = 0;
+                buffer = new byte[BlockSize];
+                using (var gzipStream = new GZipStream(sourceStream, CompressionMode.Decompress, true))
+                {
+                    bytesread = gzipStream.Read(buffer, 0, buffer.Length);
+                    if (bytesread < BlockSize)
+                        Array.Resize(ref buffer, bytesread);
+                }
+                return bytesread;
+            }
+        }
     }
 }
