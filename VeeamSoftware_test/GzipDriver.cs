@@ -193,7 +193,8 @@ namespace VeeamSoftware_test.Gzip
                 foreach (var position in getListPositionStartBlock(sourceStream))
                 {
                     int tmpBlcokIndex = blockIndex;
-                    _threadPool.Execute(new Task(() => DecompressBlock(position, tmpBlcokIndex)));
+                    long tmpPosition = position;
+                    _threadPool.Execute(new Task(() => DecompressBlock(tmpPosition, tmpBlcokIndex)));
                     blockIndex++;
                 }
                 // Если файл не начинается со стандартного заголовка, значит архив был создан с помощью сторонней программы.
@@ -243,23 +244,26 @@ namespace VeeamSoftware_test.Gzip
         {
             try
             {
-                long bais = 0;
-                int bufferNumber = 0;
-                byte[] buffer = new byte[BlockSize];
-                int bytesread = getReadBuffer(startPosition, ref bais, out buffer);
-
-                while (bytesread > 0)
+                lock (sourceStream)
                 {
-                    if (isBreak)
-                        break;
+                    long bais = 0;
+                    int bufferNumber = 0;
+                    byte[] buffer = new byte[BlockSize];
+                    int bytesread = getReadBuffer(startPosition, ref bais, ref buffer);
 
-                    byte[] nextBuffer = new byte[BlockSize];
-                    bytesread = getReadBuffer(startPosition, ref bais, out buffer);
+                    while (bytesread > 0)
+                    {
+                        if (isBreak)
+                            break;
 
-                    _bufferQueue.Enqueue(blockIndex, bufferNumber, buffer, nextBuffer.Length == 0);
-                    buffer = nextBuffer;
-                    bufferNumber++;
-                    GC.Collect();
+                        byte[] nextBuffer = new byte[BlockSize];
+                        bytesread = getReadBuffer(startPosition, ref bais, ref nextBuffer);
+
+                        _bufferQueue.Enqueue(blockIndex, bufferNumber, buffer, nextBuffer.Length == 0);
+                        buffer = nextBuffer;
+                        bufferNumber++;
+                        GC.Collect();
+                    }
                 }
 
 
@@ -274,41 +278,44 @@ namespace VeeamSoftware_test.Gzip
 
         private List<long> getListPositionStartBlock(Stream stream)
         {
-            long startPosition = stream.Position;
-            List<long> result = new List<long>();
-            if (!stream.StartsWith(gzipHeader))
-            {
-                result.Add(0);
+            /*lock (stream)
+            {*/
+                long startPosition = stream.Position;
+                List<long> result = new List<long>();
+                if (!stream.StartsWith(gzipHeader))
+                {
+                    result.Add(0);
+                    return result;
+                }
+
+                while (stream.Position < stream.Length)
+                {
+                    if (isBreak)
+                        break;
+
+                    var nextBlockIndex = stream.GetFirstBufferIndex(gzipHeader, BlockSizeRead);
+                    if (nextBlockIndex == -1)
+                        break;
+
+                    result.Add(nextBlockIndex);
+                }
+
+                stream.Position = startPosition;
+                // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
+                // необходимо вручную очистить данные буфера из Large Object Heap 
+                GC.Collect();
                 return result;
-            }
-
-            while (stream.Position < stream.Length)
-            {
-                if (isBreak)
-                    break;
-
-                var nextBlockIndex = stream.GetFirstBufferIndex(gzipHeader, BlockSizeRead);
-                if (nextBlockIndex == -1)
-                    break;
-                
-                result.Add(nextBlockIndex);
-            }
-
-            stream.Position = startPosition;
-            // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
-            // необходимо вручную очистить данные буфера из Large Object Heap 
-            GC.Collect();
-            return result;
+           // }
         }
 
-        private int getReadBuffer(long startPosition, ref long bais, out byte[] buffer)
+        private int getReadBuffer(long startPosition, ref long bais, ref byte[] buffer)
         {
-            lock (sourceStream)
-            {
+            /*lock (sourceStream)
+            {*/
+                long currentPosition = sourceStream.Position;
                 long seek = startPosition + bais;
                 sourceStream.Seek(seek, SeekOrigin.Begin);
                 int bytesread = 0;
-                buffer = new byte[BlockSize];
                 using (var gzipStream = new GZipStream(sourceStream, CompressionMode.Decompress, true))
                 {
                     bytesread = gzipStream.Read(buffer, 0, buffer.Length);
@@ -316,8 +323,9 @@ namespace VeeamSoftware_test.Gzip
                         Array.Resize(ref buffer, bytesread);
                 }
                 bais += bytesread;
+                sourceStream.Position = currentPosition;
                 return bytesread;
-            }
+            //}
         }
     }
 }

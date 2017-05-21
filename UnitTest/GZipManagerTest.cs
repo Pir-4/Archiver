@@ -39,7 +39,7 @@ namespace UnitTest
         [TestMethod]
         public void CompressFileAndDecompressToFatFile()
         {
-            string inputFile = @"E:\education\programs\programs.rar";
+            string inputFile = @"E:\education\programs\TonarinoTotoro.mkv";//@"E:\education\programs\programs.rar";
 
             string outputfile = @"E:\education\programs\test22.txt";
             string gzip = @"E:\education\programs\test.gzip";
@@ -70,6 +70,18 @@ namespace UnitTest
             Assert.IsTrue(zip.Exceptions().Count == 0);
 
             File.Delete(gzip);
+        }
+        [TestMethod]
+        public void DecompressFileToFatFile()
+        {
+            string outputFile = @"E:\education\programs\TonarinoTotoro2.mkv";
+            string gzip = @"E:\education\programs\test2.gzip";
+
+            IGZipManager zip = new GZipManagerDecompress(gzip, outputFile);
+            zip.Execute();
+            Assert.IsTrue(zip.Exceptions().Count == 0);
+
+            File.Delete(outputFile);
         }
     }
 }
