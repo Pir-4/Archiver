@@ -199,34 +199,7 @@ namespace VeeamSoftware_test.Gzip
                 }
                 // Если файл не начинается со стандартного заголовка, значит архив был создан с помощью сторонней программы.
                 // В этом случае разбить файл на отдельные части не удастся, выполняем распаковку архива в одном потоке.
-               /* if (!stream.StartsWith(gzipHeader))
-                {
-                    DecompressBlock(0, 0);
-                    return;
-                }*/
-
-
-                /*int blockIndex = 0;
-                while (stream.Position < stream.Length)
-                {
-                    if (isBreak)
-                        break;
-
-                    var nextBlockIndex = stream.GetFirstBufferIndex(gzipHeader, BlockSizeRead);
-                    if (nextBlockIndex == -1)
-                    {
-                        break;
-                    }
-                    int tmpBlcokIndex = blockIndex;
-                    _threadDispatcher.Start(() => DecompressBlock(nextBlockIndex, tmpBlcokIndex));
-                    blockIndex++;
-
-                    // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
-                    // необходимо вручную очистить данные буфера из Large Object Heap 
-                    GC.Collect();
-                }*/
-
-
+               
             }
             catch (Exception ex)
             {
