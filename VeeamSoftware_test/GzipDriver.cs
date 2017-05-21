@@ -246,23 +246,30 @@ namespace VeeamSoftware_test.Gzip
             {
                 lock (sourceStream)
                 {
-                    long bais = 0;
-                    int bufferNumber = 0;
-                    byte[] buffer = new byte[BlockSize];
-                    int bytesread = getReadBuffer(startPosition, ref bais, ref buffer);
-
-                    while (bytesread > 0)
+                    sourceStream.Seek(startPosition, SeekOrigin.Begin);
+                    using (var gzipStream = new GZipStream(sourceStream, CompressionMode.Decompress, true))
                     {
-                        if (isBreak)
-                            break;
+                        int bufferNumber = 0;
+                        byte[] buffer = new byte[BlockSize];
+                        int bytesread = gzipStream.Read(buffer, 0, buffer.Length);
+                        if (bytesread < BlockSize)
+                            Array.Resize(ref buffer, bytesread);
 
-                        byte[] nextBuffer = new byte[BlockSize];
-                        bytesread = getReadBuffer(startPosition, ref bais, ref nextBuffer);
+                        while (bytesread > 0)
+                        {
+                            if (isBreak)
+                                break;
 
-                        _bufferQueue.Enqueue(blockIndex, bufferNumber, buffer, nextBuffer.Length == 0);
-                        buffer = nextBuffer;
-                        bufferNumber++;
-                        GC.Collect();
+                            byte[] nextBuffer = new byte[BlockSize];
+                            bytesread = gzipStream.Read(nextBuffer, 0, nextBuffer.Length);
+                            if (bytesread < BlockSize)
+                                Array.Resize(ref nextBuffer, bytesread);
+
+                            _bufferQueue.Enqueue(blockIndex, bufferNumber, buffer, nextBuffer.Length == 0);
+                            buffer = nextBuffer;
+                            bufferNumber++;
+                            GC.Collect();
+                        }
                     }
                 }
 
@@ -308,10 +315,9 @@ namespace VeeamSoftware_test.Gzip
            // }
         }
 
-        private int getReadBuffer(long startPosition, ref long bais, ref byte[] buffer)
+        /*private int getReadBuffer(long startPosition, ref long bais, ref byte[] buffer)
         {
-            /*lock (sourceStream)
-            {*/
+
                 long currentPosition = sourceStream.Position;
                 long seek = startPosition + bais;
                 sourceStream.Seek(seek, SeekOrigin.Begin);
@@ -325,7 +331,6 @@ namespace VeeamSoftware_test.Gzip
                 bais += bytesread;
                 sourceStream.Position = currentPosition;
                 return bytesread;
-            //}
-        }
+        }*/
     }
 }
