@@ -53,7 +53,6 @@
     <Compile Include="QueueOrder.cs" />
     <Compile Include="StreamExtensions.cs" />
     <Compile Include="Task.cs" />
-    <Compile Include="ThreadDispatcher.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
