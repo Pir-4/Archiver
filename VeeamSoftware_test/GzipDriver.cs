@@ -243,35 +243,26 @@ namespace VeeamSoftware_test.Gzip
         {
             try
             {
-                using (var inputStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,BlockSize,FileOptions.Asynchronous))
+                long bais = 0;
+                int bufferNumber = 0;
+                byte[] buffer = new byte[BlockSize];
+                int bytesread = getReadBuffer(startPosition, ref bais, out buffer);
+
+                while (bytesread > 0)
                 {
-                    inputStream.Seek(startPosition, SeekOrigin.Begin);
-                    using (var gzipStream = new GZipStream(inputStream, CompressionMode.Decompress, true))
-                    {
-                        int bufferNumber = 0;
-                        byte[] buffer = new byte[BlockSize];
-                        int bytesread = gzipStream.Read(buffer, 0, buffer.Length);
-                        if (bytesread < BlockSize)
-                            Array.Resize(ref buffer, bytesread);
+                    if (isBreak)
+                        break;
 
+                    byte[] nextBuffer = new byte[BlockSize];
+                    bytesread = getReadBuffer(startPosition, ref bais, out buffer);
 
-                        while (bytesread > 0)
-                        {
-                            if (isBreak)
-                                break;
-
-                            byte[] nextBuffer = new byte[BlockSize];
-                            bytesread = gzipStream.Read(nextBuffer, 0, nextBuffer.Length);
-                            if (bytesread < BlockSize)
-                                Array.Resize(ref nextBuffer, bytesread);
-
-                            _bufferQueue.Enqueue(blockIndex, bufferNumber, buffer, nextBuffer.Length == 0);
-                            buffer = nextBuffer;
-                            bufferNumber++;
-                            GC.Collect();
-                        }
-                    }
+                    _bufferQueue.Enqueue(blockIndex, bufferNumber, buffer, nextBuffer.Length == 0);
+                    buffer = nextBuffer;
+                    bufferNumber++;
+                    GC.Collect();
                 }
+
+
             }
             catch (Exception ex)
             {
@@ -310,7 +301,7 @@ namespace VeeamSoftware_test.Gzip
             return result;
         }
 
-        private int getReadBuffer(long startPosition, long bais, out byte[] buffer)
+        private int getReadBuffer(long startPosition, ref long bais, out byte[] buffer)
         {
             lock (sourceStream)
             {
@@ -324,6 +315,7 @@ namespace VeeamSoftware_test.Gzip
                     if (bytesread < BlockSize)
                         Array.Resize(ref buffer, bytesread);
                 }
+                bais += bytesread;
                 return bytesread;
             }
         }
