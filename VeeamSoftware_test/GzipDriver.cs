@@ -190,12 +190,13 @@ namespace VeeamSoftware_test.Gzip
         private readonly byte[] gzipHeader = new byte[] {31, 139, 8, 0, 0, 0, 0, 0, 4, 0};
 
         private const int BlockSizeRead = 1024*1024;
+
         private Semaphore _readSemaphore = new Semaphore(0, Int32.MaxValue);
         private Queue<long> _queuePositionBlock = new Queue<long>();
 
         protected override void ReadStream()
         {
-            Thread positionThread = new Thread(getListPositionStartBlock);
+            Thread positionThread = new Thread(SearchStartPositionBlock);
             try
             {
                 sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
@@ -209,7 +210,7 @@ namespace VeeamSoftware_test.Gzip
                     lock (_queuePositionBlock)
                     {
                         long tmpPosition = _queuePositionBlock.Dequeue();
-                        if (tmpPosition == -1)
+                        if (tmpPosition == -1 || isBreak)
                             break;
 
                         int tmpBlcokIndex = blockIndex;
@@ -217,7 +218,7 @@ namespace VeeamSoftware_test.Gzip
                         blockIndex++;
                     }
                 }
-               
+
             }
             catch (Exception ex)
             {
@@ -233,6 +234,7 @@ namespace VeeamSoftware_test.Gzip
             }
 
         }
+
         /// <summary>
         /// Декомпрессия отдельного блока данных
         /// </summary>
@@ -281,34 +283,45 @@ namespace VeeamSoftware_test.Gzip
 
         }
 
-        private void getListPositionStartBlock()
+        private void SearchStartPositionBlock()
         {
-            Stream localSourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BlockSizeRead, FileOptions.Asynchronous);
-            if (!localSourceStream.StartsWith(gzipHeader))
-            {
-                Enqueue(0);
-            }
-            else
-            {
 
-
-                while (localSourceStream.Position < localSourceStream.Length)
+            try
+            {
+                using (Stream localSourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read,
+                        FileShare.Read,
+                        BlockSizeRead, FileOptions.Asynchronous))
                 {
-                    if (isBreak)
-                        break;
+                    if (localSourceStream.StartsWith(gzipHeader))
+                    {
+                        while (localSourceStream.Position < localSourceStream.Length)
+                        {
+                            if (isBreak)
+                                break;
 
-                    var nextBlockIndex = localSourceStream.GetFirstBufferIndex(gzipHeader, BlockSizeRead);
-                    if (nextBlockIndex == -1)
-                        break;
-                    Enqueue(nextBlockIndex);
+                            var nextBlockIndex = localSourceStream.GetFirstBufferIndex(gzipHeader, BlockSizeRead);
+                            if (nextBlockIndex == -1)
+                                break;
+                            Enqueue(nextBlockIndex);
+                        }
+                    }
+                    else
+                    {
+                        Enqueue(0);
+                    }
                 }
+                Enqueue(-1);
             }
-            Enqueue(-1);
-            localSourceStream.Close();
-
-            // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
-            // необходимо вручную очистить данные буфера из Large Object Heap 
-            GC.Collect();
+            catch (Exception ex)
+            {
+                _exceptions.Add(ex);
+            }
+            finally
+            {
+                // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
+                // необходимо вручную очистить данные буфера из Large Object Heap 
+                GC.Collect();
+            }
         }
 
         private void Enqueue(long position)

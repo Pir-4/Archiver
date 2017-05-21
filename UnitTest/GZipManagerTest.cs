@@ -39,7 +39,7 @@ namespace UnitTest
         [TestMethod]
         public void CompressFileAndDecompressToFatFile()
         {
-            string inputFile = @"E:\education\programs\TonarinoTotoro.mkv";//@"E:\education\programs\programs.rar";
+            string inputFile = @"E:\education\programs\programs.rar";
 
             string outputfile = @"E:\education\programs\test22.txt";
             string gzip = @"E:\education\programs\test.gzip";
