@@ -188,38 +188,44 @@ namespace VeeamSoftware_test.Gzip
         {
             try
             {
-                using (var stream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,BlockSizeRead,FileOptions.Asynchronous);
+                int blockIndex = 0;
+                foreach (var position in getListPositionStartBlock(sourceStream))
                 {
-                    // Если файл не начинается со стандартного заголовка, значит архив был создан с помощью сторонней программы.
-                    // В этом случае разбить файл на отдельные части не удастся, выполняем распаковку архива в одном потоке.
-                    if (!stream.StartsWith(gzipHeader))
-                    {
-                        DecompressBlock(0, 0);
-                        return;
-                    }
-
-
-                    int blockIndex = 0;
-                    while (stream.Position < stream.Length)
-                    {
-                        if (isBreak)
-                            break;
-
-                        var nextBlockIndex = stream.GetFirstBufferIndex(gzipHeader, BlockSizeRead);
-                        if (nextBlockIndex == -1)
-                        {
-                            break;
-                        }
-                        int tmpBlcokIndex = blockIndex;
-                        _threadDispatcher.Start(() => DecompressBlock(nextBlockIndex, tmpBlcokIndex));
-                        blockIndex++;
-
-                        // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
-                        // необходимо вручную очистить данные буфера из Large Object Heap 
-                        GC.Collect();
-                    }
-
+                    int tmpBlcokIndex = blockIndex;
+                    _threadPool.Execute(new Task(() => DecompressBlock(position, tmpBlcokIndex)));
+                    blockIndex++;
                 }
+                // Если файл не начинается со стандартного заголовка, значит архив был создан с помощью сторонней программы.
+                // В этом случае разбить файл на отдельные части не удастся, выполняем распаковку архива в одном потоке.
+               /* if (!stream.StartsWith(gzipHeader))
+                {
+                    DecompressBlock(0, 0);
+                    return;
+                }*/
+
+
+                /*int blockIndex = 0;
+                while (stream.Position < stream.Length)
+                {
+                    if (isBreak)
+                        break;
+
+                    var nextBlockIndex = stream.GetFirstBufferIndex(gzipHeader, BlockSizeRead);
+                    if (nextBlockIndex == -1)
+                    {
+                        break;
+                    }
+                    int tmpBlcokIndex = blockIndex;
+                    _threadDispatcher.Start(() => DecompressBlock(nextBlockIndex, tmpBlcokIndex));
+                    blockIndex++;
+
+                    // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
+                    // необходимо вручную очистить данные буфера из Large Object Heap 
+                    GC.Collect();
+                }*/
+
+
             }
             catch (Exception ex)
             {
@@ -237,7 +243,7 @@ namespace VeeamSoftware_test.Gzip
         {
             try
             {
-                using (var inputStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read))
+                using (var inputStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,BlockSize,FileOptions.Asynchronous))
                 {
                     inputStream.Seek(startPosition, SeekOrigin.Begin);
                     using (var gzipStream = new GZipStream(inputStream, CompressionMode.Decompress, true))
@@ -275,9 +281,33 @@ namespace VeeamSoftware_test.Gzip
 
         }
 
-        private List<long> getListPosition(Stream stream)
+        private List<long> getListPositionStartBlock(Stream stream)
         {
-            
+            long startPosition = stream.Position;
+            List<long> result = new List<long>();
+            if (!stream.StartsWith(gzipHeader))
+            {
+                result.Add(0);
+                return result;
+            }
+
+            while (stream.Position < stream.Length)
+            {
+                if (isBreak)
+                    break;
+
+                var nextBlockIndex = stream.GetFirstBufferIndex(gzipHeader, BlockSizeRead);
+                if (nextBlockIndex == -1)
+                    break;
+                
+                result.Add(nextBlockIndex);
+            }
+
+            stream.Position = startPosition;
+            // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
+            // необходимо вручную очистить данные буфера из Large Object Heap 
+            GC.Collect();
+            return result;
         }
     }
 }
