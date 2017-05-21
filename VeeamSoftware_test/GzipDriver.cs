@@ -15,6 +15,7 @@ namespace VeeamSoftware_test.Gzip
         void Execute(string inputPath, string outputPath);
         List<Exception> Exceptions { get; }
     }
+
     public abstract class GzipDriver : IGzipDriver
     {
         protected const int BlockSize = 10*1024*1024;
@@ -41,6 +42,7 @@ namespace VeeamSoftware_test.Gzip
 
             _threadDispatcher = new ThreadDispatcher(Environment.ProcessorCount);
         }
+
         public void Execute(string inputPath, string outputPath)
         {
             _threadPool = new FixedThreadPool();
@@ -52,10 +54,12 @@ namespace VeeamSoftware_test.Gzip
             _outputThread.Start();
             _autoResetEvent.WaitOne();
         }
+
         public List<Exception> Exceptions
         {
             get { return _exceptions; }
         }
+
         protected abstract void ReadStream();
 
         private void WriteStream()
@@ -64,9 +68,10 @@ namespace VeeamSoftware_test.Gzip
             {
                 using (
                     FileStream outputStream = new FileStream(_outputFilePath, FileMode.Create, FileAccess.Write,
-                        FileShare.Read,BlockSize,FileOptions.Asynchronous))
+                        FileShare.Read, BlockSize, FileOptions.Asynchronous))
                 {
-                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || !_threadPool.isEmpty /*!_threadDispatcher.isEmpty*/)
+                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || !_threadPool.isEmpty
+                        /*!_threadDispatcher.isEmpty*/)
                     {
                         if (isBreak)
                             break;
@@ -97,6 +102,7 @@ namespace VeeamSoftware_test.Gzip
                 _autoResetEvent.Set();
             }
         }
+
         protected bool isBreak
         {
             get { return _exceptions.Count != 0; }
@@ -132,8 +138,8 @@ namespace VeeamSoftware_test.Gzip
             }
             finally
             {
-                
-               
+
+
             }
 
         }
@@ -170,7 +176,7 @@ namespace VeeamSoftware_test.Gzip
 
                 _exceptions.Add(ex);
             }
-           
+
         }
     }
 
@@ -181,31 +187,49 @@ namespace VeeamSoftware_test.Gzip
         /// в начало каждого сжатого блока данных.
         /// Содержимое заголовка соответсвует RFC для формата GZip (https://www.ietf.org/rfc/rfc1952.txt).
         /// </summary>
-        private readonly byte[] gzipHeader = new byte[] { 31, 139, 8, 0, 0, 0, 0, 0, 4, 0 };
-        private const int BlockSizeRead = 1024 * 1024;
-        private Semaphore _readSemaphore = new Semaphore(0,Int32.MaxValue);
+        private readonly byte[] gzipHeader = new byte[] {31, 139, 8, 0, 0, 0, 0, 0, 4, 0};
+
+        private const int BlockSizeRead = 1024*1024;
+        private Semaphore _readSemaphore = new Semaphore(0, Int32.MaxValue);
+        private Queue<long> _queuePositionBlock = new Queue<long>();
 
         protected override void ReadStream()
         {
+            Thread positionThread = new Thread(getListPositionStartBlock);
             try
             {
-                sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,BlockSizeRead,FileOptions.Asynchronous);
+                sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                    BlockSizeRead, FileOptions.Asynchronous);
+
+                positionThread.Start();
                 int blockIndex = 0;
-                foreach (var position in getListPositionStartBlock(sourceStream))
+                while (true)
                 {
-                    int tmpBlcokIndex = blockIndex;
-                    long tmpPosition = position;
-                    _threadPool.Execute(new Task(() => DecompressBlock(tmpPosition, tmpBlcokIndex)));
-                    blockIndex++;
+                    _readSemaphore.WaitOne();
+                    lock (_queuePositionBlock)
+                    {
+                        long tmpPosition = _queuePositionBlock.Dequeue();
+                        if (tmpPosition == -1)
+                            break;
+
+                        int tmpBlcokIndex = blockIndex;
+                        _threadPool.Execute(new Task(() => DecompressBlock(tmpPosition, tmpBlcokIndex)));
+                        blockIndex++;
+                    }
                 }
-                // Если файл не начинается со стандартного заголовка, значит архив был создан с помощью сторонней программы.
-                // В этом случае разбить файл на отдельные части не удастся, выполняем распаковку архива в одном потоке.
                
             }
             catch (Exception ex)
             {
 
                 _exceptions.Add(ex);
+            }
+            finally
+            {
+                positionThread.Join();
+                // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
+                // необходимо вручную очистить данные буфера из Large Object Heap 
+                GC.Collect();
             }
 
         }
@@ -257,54 +281,44 @@ namespace VeeamSoftware_test.Gzip
 
         }
 
-        private List<long> getListPositionStartBlock(Stream stream)
+        private void getListPositionStartBlock()
         {
-            /*lock (stream)
-            {*/
-                long startPosition = stream.Position;
-                List<long> result = new List<long>();
-                if (!stream.StartsWith(gzipHeader))
-                {
-                    result.Add(0);
-                    return result;
-                }
+            Stream localSourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BlockSizeRead, FileOptions.Asynchronous);
+            if (!localSourceStream.StartsWith(gzipHeader))
+            {
+                Enqueue(0);
+            }
+            else
+            {
 
-                while (stream.Position < stream.Length)
+
+                while (localSourceStream.Position < localSourceStream.Length)
                 {
                     if (isBreak)
                         break;
 
-                    var nextBlockIndex = stream.GetFirstBufferIndex(gzipHeader, BlockSizeRead);
+                    var nextBlockIndex = localSourceStream.GetFirstBufferIndex(gzipHeader, BlockSizeRead);
                     if (nextBlockIndex == -1)
                         break;
-
-                    result.Add(nextBlockIndex);
+                    Enqueue(nextBlockIndex);
                 }
+            }
+            Enqueue(-1);
+            localSourceStream.Close();
 
-                stream.Position = startPosition;
-                // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
-                // необходимо вручную очистить данные буфера из Large Object Heap 
-                GC.Collect();
-                return result;
-           // }
+            // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
+            // необходимо вручную очистить данные буфера из Large Object Heap 
+            GC.Collect();
         }
 
-        /*private int getReadBuffer(long startPosition, ref long bais, ref byte[] buffer)
+        private void Enqueue(long position)
         {
+            lock (_queuePositionBlock)
+            {
+                _queuePositionBlock.Enqueue(position);
+                _readSemaphore.Release();
+            }
+        }
 
-                long currentPosition = sourceStream.Position;
-                long seek = startPosition + bais;
-                sourceStream.Seek(seek, SeekOrigin.Begin);
-                int bytesread = 0;
-                using (var gzipStream = new GZipStream(sourceStream, CompressionMode.Decompress, true))
-                {
-                    bytesread = gzipStream.Read(buffer, 0, buffer.Length);
-                    if (bytesread < BlockSize)
-                        Array.Resize(ref buffer, bytesread);
-                }
-                bais += bytesread;
-                sourceStream.Position = currentPosition;
-                return bytesread;
-        }*/
     }
 }
