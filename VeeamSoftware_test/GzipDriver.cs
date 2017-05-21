@@ -34,6 +34,7 @@ namespace VeeamSoftware_test.Gzip
         protected Stream sourceStream;
 
         private static readonly AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
+        protected  AutoResetEvent _writeResetEvent = new AutoResetEvent(false);
 
         protected GzipDriver()
         {
@@ -66,6 +67,7 @@ namespace VeeamSoftware_test.Gzip
         {
             try
             {
+                _writeResetEvent.WaitOne();
                 using (
                     FileStream outputStream = new FileStream(_outputFilePath, FileMode.Create, FileAccess.Write,
                         FileShare.Read, BlockSize, FileOptions.Asynchronous))
@@ -116,7 +118,6 @@ namespace VeeamSoftware_test.Gzip
             {
                 sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BlockSize,
                     FileOptions.Asynchronous);
-                List<Task> tasks = new List<Task>();
                 for (int i = 0; i < (int) Math.Ceiling((double) sourceStream.Length/BlockSize); i++)
                 {
                     if (isBreak)
@@ -127,6 +128,7 @@ namespace VeeamSoftware_test.Gzip
                     int bytesread = sourceStream.Read(readBuffer, 0, readBuffer.Length);
                     if (bytesread < BlockSize)
                         Array.Resize(ref readBuffer, bytesread);
+
                     _threadPool.Execute(new Task(() => CompressBlock(readBuffer, blockIndex)));
                 }
             }
@@ -165,18 +167,13 @@ namespace VeeamSoftware_test.Gzip
                 }
 
                 _bufferQueue.Enqueue(blockIndex, comressBuffer);
-
+                _writeResetEvent.Set();
                 // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
                 // необходимо вручную очистить данные буфера из Large Object Heap 
                 GC.Collect();
             }
-            catch (ThreadAbortException)
-            {
-                ;
-            }
             catch (Exception ex)
             {
-
                 _exceptions.Add(ex);
             }
 
@@ -269,6 +266,7 @@ namespace VeeamSoftware_test.Gzip
                                 Array.Resize(ref nextBuffer, bytesread);
 
                             _bufferQueue.Enqueue(blockIndex, bufferNumber, buffer, nextBuffer.Length == 0);
+                            _writeResetEvent.Set();
                             buffer = nextBuffer;
                             bufferNumber++;
                             GC.Collect();
@@ -278,13 +276,8 @@ namespace VeeamSoftware_test.Gzip
 
 
             }
-            catch (ThreadAbortException)
-            {
-                ;
-            }
             catch (Exception ex)
             {
-
                 _exceptions.Add(ex);
             }
 
