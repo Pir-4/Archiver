@@ -143,6 +143,8 @@ namespace VeeamSoftware_test
 
                         if (isStoping)
                             stopEvent.Set();
+
+                        Thread.Sleep(500);
                         threadsEvent[Thread.CurrentThread.ManagedThreadId].Reset();
                     }
                 }

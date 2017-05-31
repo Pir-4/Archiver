@@ -26,12 +26,14 @@ namespace VeeamSoftware_test.GZipDriver
         protected override void ReadStream()
         {
             Thread positionThread = new Thread(SearchStartPositionBlock);
+            positionThread.Start();
+
             try
             {
                 sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
                     BlockSizeRead, FileOptions.Asynchronous);
 
-                positionThread.Start();
+                
                 int blockIndex = 0;
                 while (true)
                 {
@@ -56,7 +58,7 @@ namespace VeeamSoftware_test.GZipDriver
             }
             finally
             {
-                positionThread.Join();
+               // positionThread.Join();
                 // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
                 // необходимо вручную очистить данные буфера из Large Object Heap 
                 GC.Collect();
@@ -98,7 +100,6 @@ namespace VeeamSoftware_test.GZipDriver
                             _writeResetEvent.Set();
                             buffer = nextBuffer;
                             bufferNumber++;
-                            GC.Collect();
                         }
                     }
                 }
@@ -147,6 +148,7 @@ namespace VeeamSoftware_test.GZipDriver
             }
             finally
             {
+                Thread.CurrentThread.Join();
                 // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
                 // необходимо вручную очистить данные буфера из Large Object Heap 
                 GC.Collect();

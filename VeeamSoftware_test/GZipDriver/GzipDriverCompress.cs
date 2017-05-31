@@ -16,6 +16,7 @@ namespace VeeamSoftware_test.GZipDriver
             {
                 sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BlockSize,
                     FileOptions.Asynchronous);
+
                 for (int i = 0; i < (int)Math.Ceiling((double)sourceStream.Length / BlockSize); i++)
                 {
                     if (isBreak)
@@ -64,7 +65,7 @@ namespace VeeamSoftware_test.GZipDriver
 
                 // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
                 // необходимо вручную очистить данные буфера из Large Object Heap 
-                GC.Collect();
+               // GC.Collect();
             }
             catch (Exception ex)
             {
