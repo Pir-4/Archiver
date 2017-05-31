@@ -18,6 +18,7 @@ namespace VeeamSoftware_test.GZipDriver
         private readonly Thread _sourceThread;
         private readonly Thread _outputThread;
 
+        protected int countTreadsOfObject;
         protected FixedThreadPool _threadPool;
         protected QueueOrder<byte[]> _bufferQueue = new QueueOrder<byte[]>();
         private List<Exception> _exceptions = new List<Exception>();
@@ -35,7 +36,8 @@ namespace VeeamSoftware_test.GZipDriver
             _sourceThread = new Thread(ReadStream);
             _outputThread = new Thread(WriteStream);
 
-            _threadPool = new FixedThreadPool();
+            countTreadsOfObject = 1;
+            
 
         }
 
@@ -43,6 +45,8 @@ namespace VeeamSoftware_test.GZipDriver
         {
             _soutceFilePath = inputPath;
             _outputFilePath = outputPath;
+
+            _threadPool = new FixedThreadPool(Environment.ProcessorCount - countTreadsOfObject);
 
             _sourceThread.Start();
             _outputThread.Start();
@@ -80,7 +84,7 @@ namespace VeeamSoftware_test.GZipDriver
 
                             // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
                             // необходимо вручную очистить данные буфера из Large Object Heap
-                            GC.Collect();
+                            //GC.Collect();
                         }
                     }
                 }

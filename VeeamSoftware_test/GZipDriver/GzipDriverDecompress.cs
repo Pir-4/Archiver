@@ -23,6 +23,11 @@ namespace VeeamSoftware_test.GZipDriver
         private Semaphore _readSemaphore = new Semaphore(0, Int32.MaxValue);
         private Queue<long> _queuePositionBlock = new Queue<long>();
 
+        public GzipDriverDecompress() : base()
+        {
+            countTreadsOfObject += 2;
+        }
+
         protected override void ReadStream()
         {
             Thread positionThread = new Thread(SearchStartPositionBlock);
@@ -58,6 +63,7 @@ namespace VeeamSoftware_test.GZipDriver
             }
             finally
             {
+                _threadPool.UpCountTreaads();
                // positionThread.Join();
                 // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
                 // необходимо вручную очистить данные буфера из Large Object Heap 
@@ -149,6 +155,7 @@ namespace VeeamSoftware_test.GZipDriver
             finally
             {
                 Thread.CurrentThread.Join();
+                _threadPool.UpCountTreaads();
                 // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
                 // необходимо вручную очистить данные буфера из Large Object Heap 
                 GC.Collect();

@@ -10,14 +10,19 @@ namespace VeeamSoftware_test.GZipDriver
 {
     public class GzipDriverCompress : GzipDriver
     {
+        public GzipDriverCompress() : base()
+        {
+            countTreadsOfObject++;
+        }
         protected override void ReadStream()
         {
             try
             {
-                sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read, BlockSize,
+                sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
+                    BlockSize,
                     FileOptions.Asynchronous);
 
-                for (int i = 0; i < (int)Math.Ceiling((double)sourceStream.Length / BlockSize); i++)
+                for (int i = 0; i < (int) Math.Ceiling((double) sourceStream.Length / BlockSize); i++)
                 {
                     if (isBreak)
                         break;
@@ -35,6 +40,11 @@ namespace VeeamSoftware_test.GZipDriver
             {
 
                 Exceptions.Add(ex);
+            }
+            finally
+            {
+                _threadPool.UpCountTreaads();
+                GC.Collect();
             }
 
         }

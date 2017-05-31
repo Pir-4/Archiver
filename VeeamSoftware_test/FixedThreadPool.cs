@@ -12,7 +12,7 @@ namespace VeeamSoftware_test
     public class FixedThreadPool : IDisposable
     {
 
-        private int numberThreads;
+        private int _maxCountThreads;
 
         private ManualResetEvent stopEvent;
         private bool _isStoping;
@@ -36,13 +36,13 @@ namespace VeeamSoftware_test
         /// <summary>
         /// Создает пул потоков с указанным количеством потоков.
         /// </summary>
-        /// <param name="numberThreads">Количество поток.</param>
-        public FixedThreadPool(int numberThreads)
+        /// <param name="maxCountThreads">Количество поток.</param>
+        public FixedThreadPool(int maxCountThreads)
         {
-            if (numberThreads <= 0)
-                throw new ArgumentException("numberThreads", "Количество потоков должно быть больше нуля.");
+            if (maxCountThreads <= 0)
+                maxCountThreads = 1;
 
-            this.numberThreads = numberThreads;
+            this._maxCountThreads = maxCountThreads;
 
             this.stopLock = new object();
             this.stopEvent = new ManualResetEvent(false);
@@ -51,8 +51,8 @@ namespace VeeamSoftware_test
             this.scheduleThread = new Thread(SelectAndStartFreeThread) { Name = "Schedule Thread", IsBackground = true };
             scheduleThread.Start();
 
-            this.threads = new Thread[numberThreads];
-            this.threadsEvent = new Dictionary<int, ManualResetEvent>(numberThreads);
+            this.threads = new Thread[maxCountThreads];
+            this.threadsEvent = new Dictionary<int, ManualResetEvent>(maxCountThreads);
 
             this.tasks = new Queue<Task>();
         }
@@ -83,6 +83,21 @@ namespace VeeamSoftware_test
         {
             get { return (tasks.Count == 0); }
         }
+
+        /// <summary>
+        /// Увеличивает количество максимально доступных потоков
+        /// </summary>
+        public void UpCountTreaads()
+        {
+            
+            lock (tasks)
+            {
+                Interlocked.Increment(ref _maxCountThreads);
+                if ( tasks.Where(t => !t.IsRunned).Count() > 0)
+                    CreateThread();
+            }
+            
+        }
         /// <summary>
         /// Высвобождает ресурсы, которые используются пулом потоков.
         /// </summary>
@@ -97,7 +112,7 @@ namespace VeeamSoftware_test
                     scheduleEvent.Close();
                     lock (threads)
                     {
-                        for (int i = 0; i < numberThreads; i++)
+                        for (int i = 0; i < threads.Length; i++)
                         {
                             if (threads[i] != null)
                             {
@@ -144,7 +159,7 @@ namespace VeeamSoftware_test
                         if (isStoping)
                             stopEvent.Set();
 
-                        Thread.Sleep(500);
+                        //Thread.Sleep(500);
                         threadsEvent[Thread.CurrentThread.ManagedThreadId].Reset();
                     }
                 }
@@ -186,8 +201,11 @@ namespace VeeamSoftware_test
         {
             lock (threads)
             {
-                if (currentCountTreads < numberThreads)
+                if (currentCountTreads < _maxCountThreads)
                 {
+                    if (threads.Length  < _maxCountThreads)
+                        Array.Resize(ref threads, _maxCountThreads);
+
                     threads[currentCountTreads] = new Thread(ThreadWork) {Name = "Pool Thread " + currentCountTreads.ToString(), IsBackground = true};
                     threadsEvent.Add(threads[currentCountTreads].ManagedThreadId, new ManualResetEvent(false));
 
