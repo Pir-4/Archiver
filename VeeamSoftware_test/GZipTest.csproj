@@ -46,7 +46,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="FixedThreadPool.cs" />
-    <Compile Include="GzipDriver.cs" />
+    <Compile Include="GZipDriver\GzipDriver.cs" />
+    <Compile Include="GZipDriver\GzipDriverCompress.cs" />
+    <Compile Include="GZipDriver\GzipDriverDecompress.cs" />
+    <Compile Include="GZipDriver\IGzipDriver.cs" />
     <Compile Include="GZipManager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

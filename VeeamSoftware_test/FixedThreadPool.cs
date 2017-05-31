@@ -81,7 +81,7 @@ namespace VeeamSoftware_test
 
         public bool isEmpty
         {
-            get { return (tasks.Count == 0 && tasks.Where(t => !t.IsRunned).Count() == 0); }
+            get { return (tasks.Count == 0); }
         }
         /// <summary>
         /// Высвобождает ресурсы, которые используются пулом потоков.
