@@ -84,7 +84,7 @@ namespace VeeamSoftware_test.GZipDriver
                 lock (sourceStream)
                 {
                     sourceStream.Seek(startPosition, SeekOrigin.Begin);
-                    using (var gzipStream = new GZipStream(sourceStream, CompressionMode.Decompress, true))
+                    using (var gzipStream = new GZipStream(sourceStream, CompressionMode.Decompress,true))
                     {
                         int bufferNumber = 0;
                         byte[] buffer = new byte[BlockSize];

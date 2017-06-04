@@ -106,10 +106,11 @@ namespace VeeamSoftware_test
         {
             if (!isDisposed)
             {
-                if (disposing)
-                {
+               /* if (disposing)
+                {*/
                     scheduleThread.Abort();
                     scheduleEvent.Close();
+
                     lock (threads)
                     {
                         for (int i = 0; i < threads.Length; i++)
@@ -120,10 +121,11 @@ namespace VeeamSoftware_test
                                 threadsEvent[threads[i].ManagedThreadId].Close();
                             }
                         }
-                    }
+                        isDisposed = true;
                 }
+                /*}*/
 
-                isDisposed = true;
+                
             }
         }
 
@@ -201,6 +203,9 @@ namespace VeeamSoftware_test
         {
             lock (threads)
             {
+                if(isDisposed)
+                    return;
+
                 if (currentCountTreads < _maxCountThreads)
                 {
                     if (threads.Length  < _maxCountThreads)

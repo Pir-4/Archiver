@@ -63,7 +63,7 @@ namespace VeeamSoftware_test.GZipDriver
                 byte[] comressBuffer;
                 using (var memoryStream = new MemoryStream())
                 {
-                    using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress, true))
+                    using (var gzipStream = new GZipStream(memoryStream, CompressionMode.Compress,true))
                     {
                         gzipStream.Write(readBuffer, 0, readBuffer.Length);
                     }
