@@ -70,7 +70,7 @@ namespace VeeamSoftware_test.GZipDriver
                     FileStream outputStream = new FileStream(_outputFilePath, FileMode.Create, FileAccess.Write,
                         FileShare.Read, BlockSize, FileOptions.Asynchronous))
                 {
-                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || !_threadPool.isEmpty)
+                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || !_threadPool.isTasksEmpty)
                     {
                         if (isBreak)
                             break;
@@ -81,10 +81,6 @@ namespace VeeamSoftware_test.GZipDriver
 
                             outputStream.Write(buffer, 0, buffer.Length);
                             outputStream.Flush();
-
-                            // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
-                            // необходимо вручную очистить данные буфера из Large Object Heap
-                            //GC.Collect();
                         }
                     }
                 }

@@ -14,19 +14,13 @@ namespace VeeamSoftware_test
 
         private int _maxCountThreads;
 
-        private ManualResetEvent stopEvent;
-        private bool _isStoping;
-        private object stopLock;
+        private bool _isStoping = false;
+        private bool _isDispose = false;
 
         private Dictionary<int, ManualResetEvent> threadsEvent;
         private Thread[] threads;
         private Queue<Task> tasks;
         private int currentCountTreads;
-
-        private ManualResetEvent scheduleEvent;
-        private Thread scheduleThread;
-
-        private bool isDisposed;
 
         /// <summary>
         /// Создает пул потоков с количеством потоков равным количеству ядер процессора.
@@ -39,21 +33,12 @@ namespace VeeamSoftware_test
         /// <param name="maxCountThreads">Количество поток.</param>
         public FixedThreadPool(int maxCountThreads)
         {
-            if (maxCountThreads <= 0)
+            if (maxCountThreads < 1)
                 maxCountThreads = 1;
 
             this._maxCountThreads = maxCountThreads;
-
-            this.stopLock = new object();
-            this.stopEvent = new ManualResetEvent(false);
-
-            this.scheduleEvent = new ManualResetEvent(false);
-            this.scheduleThread = new Thread(SelectAndStartFreeThread) { Name = "Schedule Thread", IsBackground = true };
-            scheduleThread.Start();
-
             this.threads = new Thread[maxCountThreads];
             this.threadsEvent = new Dictionary<int, ManualResetEvent>(maxCountThreads);
-
             this.tasks = new Queue<Task>();
         }
 
@@ -62,7 +47,7 @@ namespace VeeamSoftware_test
         /// </summary>
         ~FixedThreadPool()
         {
-            Dispose(false);
+            Dispose(true);
         }
 
         /// <summary>
@@ -74,14 +59,28 @@ namespace VeeamSoftware_test
             GC.SuppressFinalize(this);
         }
 
-        public bool isStoping
+        /// <summary>
+        /// Заняты ли потоки работой
+        /// </summary>
+        public bool isWork
         {
-            get { return _isStoping; }
+            get
+            {
+                lock (threads)
+                {
+                    return threads.Where(th => th.IsAlive).Count() != 0;
+                }
+            }
         }
 
-        public bool isEmpty
+        public bool isTasksEmpty
         {
-            get { return (tasks.Count == 0); }
+            get {
+                lock (tasks)
+                {
+                    return tasks.Count == 0;
+                }
+            }
         }
 
         /// <summary>
@@ -94,41 +93,45 @@ namespace VeeamSoftware_test
             {
                 Interlocked.Increment(ref _maxCountThreads);
                 if ( tasks.Where(t => !t.IsRunned).Count() > 0)
-                    CreateThread();
+                    ManagerThread();
             }
             
         }
-        /// <summary>
-        /// Высвобождает ресурсы, которые используются пулом потоков.
-        /// </summary>
-        /// <param name="disposing"></param>
-        protected virtual void Dispose(bool disposing)
+        private void ThreadWork()
         {
-            if (!isDisposed)
+            try
             {
-               /* if (disposing)
-                {*/
-                    scheduleThread.Abort();
-                    scheduleEvent.Close();
+                while (true)
+                {
+                    threadsEvent[Thread.CurrentThread.ManagedThreadId].WaitOne();
 
-                    lock (threads)
+                    if (_isStoping)
+                        break;
+
+                    Task task = SelectTask();
+
+                    if (task == null)
                     {
-                        for (int i = 0; i < threads.Length; i++)
-                        {
-                            if (threads[i] != null)
-                            {
-                                threads[i].Abort();
-                                threadsEvent[threads[i].ManagedThreadId].Close();
-                            }
-                        }
-                        isDisposed = true;
-                }
-                /*}*/
+                        threadsEvent[Thread.CurrentThread.ManagedThreadId].Reset();
+                        continue;
+                    }
 
-                
+                    task.Execute();
+                    threadsEvent[threads[currentCountTreads].ManagedThreadId].Set();
+                }
             }
+            catch (Exception e)
+            {
+                throw e;
+            }
+            finally
+            {
+                threadsEvent[Thread.CurrentThread.ManagedThreadId].Reset();
+            }
+
         }
 
+        #region Управление задачами
         private Task SelectTask()
         {
             lock (tasks)
@@ -139,87 +142,14 @@ namespace VeeamSoftware_test
                 return tasks.Dequeue();
             }
         }
-
-        private void ThreadWork()
-        {
-            while (true)
-            {
-                threadsEvent[Thread.CurrentThread.ManagedThreadId].WaitOne();
-
-                Task task = SelectTask();
-                if (task != null)
-                {
-                    try
-                    {
-                        task.Execute();
-                    }
-                    finally
-                    {
-                        if (!isEmpty)
-                            scheduleEvent.Set();
-
-                        if (isStoping)
-                            stopEvent.Set();
-
-                        //Thread.Sleep(500);
-                        threadsEvent[Thread.CurrentThread.ManagedThreadId].Reset();
-                    }
-                }
-            }
-        }
-
-        private void SelectAndStartFreeThread()
-        {
-            while (true)
-            {
-                scheduleEvent.WaitOne();
-                lock (threads)
-                {
-                    foreach (var thread in threads)
-                    {
-                        if (threadsEvent[thread.ManagedThreadId].WaitOne(0) == false)
-                        {
-                            threadsEvent[thread.ManagedThreadId].Set();
-                            break;
-                        }
-                    }
-                }
-
-                scheduleEvent.Reset();
-            }
-        }
-
         private void AddTask(Task task)
         {
             lock (tasks)
             {
                 tasks.Enqueue(task);
             }
-            CreateThread();
-            scheduleEvent.Set();
+            ManagerThread();
         }
-
-        private void CreateThread()
-        {
-            lock (threads)
-            {
-                if(isDisposed)
-                    return;
-
-                if (currentCountTreads < _maxCountThreads)
-                {
-                    if (threads.Length  < _maxCountThreads)
-                        Array.Resize(ref threads, _maxCountThreads);
-
-                    threads[currentCountTreads] = new Thread(ThreadWork) {Name = "Pool Thread " + currentCountTreads.ToString(), IsBackground = true};
-                    threadsEvent.Add(threads[currentCountTreads].ManagedThreadId, new ManualResetEvent(false));
-
-                    threads[currentCountTreads].Start();
-                    Interlocked.Increment(ref currentCountTreads);
-                }
-            }
-        }
-
         /// <summary>
         /// Ставит задачу в очередь.
         /// </summary>
@@ -230,16 +160,12 @@ namespace VeeamSoftware_test
             if (task == null)
                 throw new ArgumentNullException("task", "The Task can't be null.");
 
-            lock (stopLock)
-            {
-                if (isStoping)
-                {
-                    return false;
-                }
+            if (_isStoping)
+                return false;
 
-                AddTask(task);
-                return true;
-            }
+            AddTask(task);
+            return true;
+
         }
 
         /// <summary>
@@ -262,24 +188,128 @@ namespace VeeamSoftware_test
             return result;
         }
 
+
+        #endregion
+        
+        #region Управление зпуском и созданием потоков
+        /// <summary>
+        /// Управляет запуском потоков
+        /// </summary>
+        /// <returns></returns>
+        private bool ManagerThread()
+        {
+            lock (threads)
+            {
+                return StartFreeThreads() || StartIsNotAliveThreads() || CreateThread();
+            }
+
+        }
+        /// <summary>
+        /// Создает новый поток и запускает его, если еще не достигнут предел
+        /// </summary>
+        /// <returns> успешность запуска</returns>
+        private bool CreateThread()
+        {
+            if (currentCountTreads < _maxCountThreads)
+            {
+                if (threads.Length < _maxCountThreads)
+                    Array.Resize(ref threads, _maxCountThreads);
+
+                threads[currentCountTreads] =
+                    new Thread(ThreadWork) { Name = "Pool Thread " + currentCountTreads.ToString(), IsBackground = true };
+                threadsEvent.Add(threads[currentCountTreads].ManagedThreadId, new ManualResetEvent(false));
+
+                threadsEvent[threads[currentCountTreads].ManagedThreadId].Set();
+                threads[currentCountTreads].Start();
+                Interlocked.Increment(ref currentCountTreads);
+                return true;
+            }
+            return false;
+
+        }
+
+        /// <summary>
+        /// Запускает первый попавшийся поток, который находиться в ожидании
+        /// </summary>
+        /// <returns>упешность запуска</returns>
+        private bool StartFreeThreads()
+        {
+            foreach (var thread in threads)
+            {
+                if (thread.IsAlive && threadsEvent[thread.ManagedThreadId].WaitOne(0) == false)
+                {
+                    threadsEvent[thread.ManagedThreadId].Set();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+
+        /// <summary>
+        /// Запускает первый попавшийся поток, который уже завершил свое выполнение
+        /// </summary>
+        /// <returns> успешность запуска</returns>
+        private bool StartIsNotAliveThreads()
+        {
+            foreach (var thread in threads)
+            {
+                if (!thread.IsAlive)
+                {
+                    threadsEvent[thread.ManagedThreadId].Set();
+                    thread.Start();
+                    return true;
+                }
+            }
+            return false;
+        }
+
+
+        #endregion
+
+        #region Остановка и унитожение Pool
         /// <summary>
         /// Останавливает работу пула потоков. Ожидает завершения всех задач (запущенных и стоящих в очереди) и уничтожает все ресурсы.
         /// </summary>
         public void Stop()
         {
-            lock (stopLock)
+            lock (threads)
             {
+                if (_isStoping)
+                    return;
+
                 _isStoping = true;
-            }
 
-            while (tasks.Count > 0)
-            {
-                stopEvent.WaitOne();
-                stopEvent.Reset();
+                foreach (var thread in threads)
+                    if (thread.IsAlive && threadsEvent[thread.ManagedThreadId].WaitOne(0) == false)
+                        threadsEvent[thread.ManagedThreadId].Set();
             }
-
-            Dispose(true);
         }
+        /// <summary>
+        /// Высвобождает ресурсы, которые используются пулом потоков.
+        /// </summary>
+        /// <param name="disposing"></param>
+        protected virtual void Dispose(bool dis)
+        {
+            Stop();
+            lock (threads)
+            {
+                if (_isDispose)
+                    return;
+
+                foreach (Thread thread in threads)
+                {
+                    threadsEvent[thread.ManagedThreadId].Close();
+                    thread.Join();
+                }
+                _isDispose = true;
+            }
+        }
+
+
+        #endregion
+
 
     }
 }
