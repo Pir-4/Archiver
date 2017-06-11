@@ -91,6 +91,9 @@ namespace VeeamSoftware_test
             
             lock (tasks)
             {
+                if(_isStoping)
+                    return;
+
                 Interlocked.Increment(ref _maxCountThreads);
                 if ( tasks.Where(t => !t.IsRunned).Count() > 0)
                     ManagerThread();
@@ -200,6 +203,9 @@ namespace VeeamSoftware_test
         {
             lock (threads)
             {
+                if (_isStoping)
+                    return false;
+
                 return StartFreeThreads() || StartIsNotAliveThreads() || CreateThread();
             }
 
@@ -279,8 +285,8 @@ namespace VeeamSoftware_test
         {
             lock (threads)
             {
-                if (_isStoping)
-                    return;
+                /*if (_isStoping)
+                    return;*/
 
                 _isStoping = true;
 

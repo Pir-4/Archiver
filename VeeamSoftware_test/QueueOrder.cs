@@ -17,8 +17,16 @@ namespace VeeamSoftware_test
         private Dictionary<int, int> _subOrderLimits = new Dictionary<int, int>();
         private int _currentOrder;
         private int _currentSubOrder;
-        private readonly object _lock = new object();
 
+        private int _maxSize = 15;
+        private Semaphore _semaphoreEnqueue;
+
+        ManualResetEvent _addEvent = new ManualResetEvent(false);
+
+        public QueueOrder()
+        {
+            _semaphoreEnqueue = new Semaphore(_maxSize, _maxSize);
+        }
         /// <summary>
         /// Добавление эелмента в очередь
         /// </summary>
@@ -29,13 +37,15 @@ namespace VeeamSoftware_test
         /// для основного порядкового номера</param>
         public void Enqueue(int order, int subOrder, T item, bool lastSubOrder = false)
         {
-            lock (_lock)
+            _semaphoreEnqueue.WaitOne();
+            lock (_queueDictionary)
             {
                 QueuOrder queuOrder = new QueuOrder(order, subOrder);
                 if (lastSubOrder)
                     _subOrderLimits[order] = subOrder;
 
                 _queueDictionary.Add(queuOrder, item);
+                _addEvent.Set();
             }
         }
         /// <summary>
@@ -55,32 +65,49 @@ namespace VeeamSoftware_test
         public bool TryGetValue(out T item)
         {
             item = default(T);
-
-            lock (_lock)
+            while (true)
             {
-                QueuOrder queuOrder = new QueuOrder(_currentOrder, _currentSubOrder);
-                if (_queueDictionary.TryGetValue(queuOrder, out item))
+                if(!isEnd)
+                    _addEvent.WaitOne();
+
+                lock (_queueDictionary)
                 {
-                    _queueDictionary.Remove(queuOrder);
-                    if (_subOrderLimits.ContainsKey(_currentOrder) && _currentSubOrder == _subOrderLimits[_currentOrder])
+                    QueuOrder queuOrder = new QueuOrder(_currentOrder, _currentSubOrder);
+                    if (_queueDictionary.TryGetValue(queuOrder, out item))
                     {
-                        Interlocked.Increment(ref _currentOrder);
-                        _currentSubOrder = 0;
+                        _queueDictionary.Remove(queuOrder);
+                        if (_subOrderLimits.ContainsKey(_currentOrder) &&
+                            _currentSubOrder == _subOrderLimits[_currentOrder])
+                        {
+                            Interlocked.Increment(ref _currentOrder);
+                            _currentSubOrder = 0;
+                        }
+                        else
+                        {
+                            Interlocked.Increment(ref _currentSubOrder);
+                        }
+                        _semaphoreEnqueue.Release();
+                        _addEvent.Set();
+                        return true;
                     }
-                    else
-                    {
-                        Interlocked.Increment(ref _currentSubOrder);
-                    }
-                    return true;
+                    else if(isEnd && Size == 0)
+                        break;
                 }
             }
-
             return false;
         }
-        public int Size
-        {
-            get { return _queueDictionary.Count; }
+
+        public int Size {
+            get
+            {
+                lock (_queueDictionary)
+                {
+                    return _queueDictionary.Count();
+                }
+            }
         }
+        public bool isEnd { get; set; }
+
         /// <summary>
         /// Составной порядковый элемент в очереди
         /// </summary>

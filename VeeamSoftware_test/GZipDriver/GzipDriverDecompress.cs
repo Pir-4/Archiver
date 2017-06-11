@@ -64,9 +64,7 @@ namespace VeeamSoftware_test.GZipDriver
             finally
             {
                 _threadPool.UpCountTreaads();
-               // positionThread.Join();
-                // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
-                // необходимо вручную очистить данные буфера из Large Object Heap 
+                _bufferQueue.isEnd = true;
                 GC.Collect();
             }
 
@@ -103,7 +101,7 @@ namespace VeeamSoftware_test.GZipDriver
                                 Array.Resize(ref nextBuffer, bytesread);
 
                             _bufferQueue.Enqueue(blockIndex, bufferNumber, buffer, nextBuffer.Length == 0);
-                            _writeResetEvent.Set();
+                            //_writeResetEvent.Set();
                             buffer = nextBuffer;
                             bufferNumber++;
                         }

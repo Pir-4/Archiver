@@ -50,7 +50,13 @@ namespace VeeamSoftware_test.GZipDriver
 
             _sourceThread.Start();
             _outputThread.Start();
+
             _autoResetEvent.WaitOne();
+
+            _sourceThread.Join();
+            _outputThread.Join();
+            _threadPool.Dispose();
+
         }
 
         public List<Exception> Exceptions
@@ -65,7 +71,7 @@ namespace VeeamSoftware_test.GZipDriver
         {
             try
             {
-                _writeResetEvent.WaitOne();
+               // _writeResetEvent.WaitOne();
                 using (
                     FileStream outputStream = new FileStream(_outputFilePath, FileMode.Create, FileAccess.Write,
                         FileShare.Read, BlockSize, FileOptions.Asynchronous))
@@ -78,7 +84,6 @@ namespace VeeamSoftware_test.GZipDriver
                         byte[] buffer;
                         if (_bufferQueue.TryGetValue(out buffer))
                         {
-
                             outputStream.Write(buffer, 0, buffer.Length);
                             outputStream.Flush();
                         }
