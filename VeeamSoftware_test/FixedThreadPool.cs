@@ -149,6 +149,7 @@ namespace VeeamSoftware_test
         {
             lock (tasks)
             {
+                _isStoping = false;
                 tasks.Enqueue(task);
             }
             ManagerThread();
@@ -285,14 +286,17 @@ namespace VeeamSoftware_test
         {
             lock (threads)
             {
-                /*if (_isStoping)
-                    return;*/
+                if (_isStoping)
+                    return;
 
                 _isStoping = true;
 
                 foreach (var thread in threads)
                     if (thread.IsAlive && threadsEvent[thread.ManagedThreadId].WaitOne(0) == false)
+                    {
                         threadsEvent[thread.ManagedThreadId].Set();
+                        thread.Join();
+                    }
             }
         }
         /// <summary>
@@ -310,7 +314,7 @@ namespace VeeamSoftware_test
                 foreach (Thread thread in threads)
                 {
                     threadsEvent[thread.ManagedThreadId].Close();
-                    thread.Join();
+                   // thread.Join();
                 }
                 _isDispose = true;
             }
