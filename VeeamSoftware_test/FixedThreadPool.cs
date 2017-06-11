@@ -18,9 +18,9 @@ namespace VeeamSoftware_test
         private bool _isDispose = false;
 
         private Dictionary<int, ManualResetEvent> threadsEvent;
-        private Thread[] threads;
+        private List<Thread> threads;
         private Queue<Task> tasks;
-        private int currentCountTreads;
+        
 
         /// <summary>
         /// Создает пул потоков с количеством потоков равным количеству ядер процессора.
@@ -37,7 +37,7 @@ namespace VeeamSoftware_test
                 maxCountThreads = 1;
 
             this._maxCountThreads = maxCountThreads;
-            this.threads = new Thread[maxCountThreads];
+            this.threads = new List<Thread>();
             this.threadsEvent = new Dictionary<int, ManualResetEvent>(maxCountThreads);
             this.tasks = new Queue<Task>();
         }
@@ -117,7 +117,7 @@ namespace VeeamSoftware_test
                     }
 
                     task.Execute();
-                    threadsEvent[threads[currentCountTreads].ManagedThreadId].Set();
+                    threadsEvent[Thread.CurrentThread.ManagedThreadId].Set();
                 }
             }
             catch (Exception e)
@@ -210,18 +210,21 @@ namespace VeeamSoftware_test
         /// <returns> успешность запуска</returns>
         private bool CreateThread()
         {
-            if (currentCountTreads < _maxCountThreads)
+            if (threads.Count < _maxCountThreads)
             {
-                if (threads.Length < _maxCountThreads)
-                    Array.Resize(ref threads, _maxCountThreads);
+                int currentCountTreads = threads.Count;
 
-                threads[currentCountTreads] =
-                    new Thread(ThreadWork) { Name = "Pool Thread " + currentCountTreads.ToString(), IsBackground = true };
+                threads.Add(new Thread(ThreadWork)
+                {
+                    Name = "Pool Thread " + currentCountTreads.ToString(),
+                    IsBackground = true
+                });
+
                 threadsEvent.Add(threads[currentCountTreads].ManagedThreadId, new ManualResetEvent(false));
 
                 threadsEvent[threads[currentCountTreads].ManagedThreadId].Set();
                 threads[currentCountTreads].Start();
-                Interlocked.Increment(ref currentCountTreads);
+
                 return true;
             }
             return false;
