@@ -55,7 +55,7 @@ namespace VeeamSoftware_test.GZipDriver
 
             _sourceThread.Join();
             _outputThread.Join();
-            _threadPool.Dispose();
+           // _threadPool.Dispose();
 
         }
 

@@ -18,14 +18,13 @@ namespace VeeamSoftware_test
         private int _currentOrder;
         private int _currentSubOrder;
 
-        private int _maxSize = 15;
         private Semaphore _semaphoreEnqueue;
 
         ManualResetEvent _addEvent = new ManualResetEvent(false);
 
-        public QueueOrder()
+        public QueueOrder(int maxSize = 15)
         {
-            _semaphoreEnqueue = new Semaphore(_maxSize, _maxSize);
+            _semaphoreEnqueue = new Semaphore(maxSize, maxSize);
         }
         /// <summary>
         /// Добавление эелмента в очередь

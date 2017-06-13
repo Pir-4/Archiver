@@ -9,7 +9,7 @@ namespace VeeamSoftware_test
     /// <summary>
     /// Пул потоков. В нем задачи запускаются по приоритетам. Если количество потоков больше или равно 4, то на каждые 3 задачи с высоким приоритетом - будет запущена задача с нормальным приоритетом. Если количество потоков меньше 4, тогда задачи выполняются прямо следуя приоритетам. Задачи с низким приоритетом выполняются в последнюю очередь.
     /// </summary>
-    public class FixedThreadPool : IDisposable
+    public class FixedThreadPool /*: IDisposable*/
     {
 
         private int _maxCountThreads;
@@ -20,7 +20,9 @@ namespace VeeamSoftware_test
         private Dictionary<int, ManualResetEvent> threadsEvent;
         private List<Thread> threads;
         private Queue<Task> tasks;
-        
+
+        private Semaphore _semaphoreQueue;
+
 
         /// <summary>
         /// Создает пул потоков с количеством потоков равным количеству ядер процессора.
@@ -37,6 +39,7 @@ namespace VeeamSoftware_test
                 maxCountThreads = 1;
 
             this._maxCountThreads = maxCountThreads;
+            _semaphoreQueue = new Semaphore(Environment.ProcessorCount * 2, Environment.ProcessorCount * 2);
             this.threads = new List<Thread>();
             this.threadsEvent = new Dictionary<int, ManualResetEvent>(maxCountThreads);
             this.tasks = new Queue<Task>();
@@ -47,17 +50,17 @@ namespace VeeamSoftware_test
         /// </summary>
         ~FixedThreadPool()
         {
-            Dispose(true);
+            //Dispose(true);
         }
 
         /// <summary>
         /// Высвобождает ресурсы, которые используются пулом потоков.
         /// </summary>
-        public void Dispose()
+       /* public void Dispose()
         {
             Dispose(true);
             GC.SuppressFinalize(this);
-        }
+        }*/
 
         /// <summary>
         /// Заняты ли потоки работой
@@ -120,7 +123,9 @@ namespace VeeamSoftware_test
                     }
 
                     task.Execute();
+                    _semaphoreQueue.Release();
                     threadsEvent[Thread.CurrentThread.ManagedThreadId].Set();
+
                 }
             }
             catch (Exception e)
@@ -130,6 +135,7 @@ namespace VeeamSoftware_test
             finally
             {
                 threadsEvent[Thread.CurrentThread.ManagedThreadId].Reset();
+                Thread.CurrentThread.Join();
             }
 
         }
@@ -150,6 +156,7 @@ namespace VeeamSoftware_test
             lock (tasks)
             {
                 _isStoping = false;
+                _semaphoreQueue.WaitOne();
                 tasks.Enqueue(task);
             }
             ManagerThread();
@@ -163,9 +170,6 @@ namespace VeeamSoftware_test
         {
             if (task == null)
                 throw new ArgumentNullException("task", "The Task can't be null.");
-
-            if (_isStoping)
-                return false;
 
             AddTask(task);
             return true;
@@ -295,7 +299,7 @@ namespace VeeamSoftware_test
                     if (thread.IsAlive && threadsEvent[thread.ManagedThreadId].WaitOne(0) == false)
                     {
                         threadsEvent[thread.ManagedThreadId].Set();
-                        thread.Join();
+                       // thread.Join();
                     }
             }
         }
@@ -303,7 +307,7 @@ namespace VeeamSoftware_test
         /// Высвобождает ресурсы, которые используются пулом потоков.
         /// </summary>
         /// <param name="disposing"></param>
-        protected virtual void Dispose(bool dis)
+       /* protected virtual void Dispose(bool dis)
         {
             Stop();
             lock (threads)
@@ -318,7 +322,7 @@ namespace VeeamSoftware_test
                 }
                 _isDispose = true;
             }
-        }
+        }*/
 
 
         #endregion
