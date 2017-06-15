@@ -3,7 +3,7 @@
 namespace VeeamSoftware_test
 {
     /// <summary>
-    /// Класс представляет задачу для выполнения в <see cref="FixedThreadPool"/>
+    /// Класс представляет задачу для выполнения в <see cref="MyThreadPool"/>
     /// </summary>
     public class Task
     {
