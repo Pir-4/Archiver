@@ -33,7 +33,7 @@ namespace VeeamSoftware_test
 
         private bool _isStoping = true;
         private bool _isBreak;
-        private object _isBreakLock;
+        private readonly object _isBreakLock = new object();
 
         private Dictionary<int, AutoResetEvent> threadsEvent;
         private List<Thread> threads;
@@ -57,6 +57,7 @@ namespace VeeamSoftware_test
 
             this.threads = new List<Thread>();
             this.threadsEvent = new Dictionary<int, AutoResetEvent>(maxCountThreads);
+
             this.tasks = new Queue<Task>();
         }
         /// <summary>
@@ -226,10 +227,10 @@ namespace VeeamSoftware_test
 
                 }
             }
-            catch (Exception e)
+            /*catch (Exception e)
             {
                 throw e;
-            }
+            }*/
             finally
             {
                 ClearThread(Thread.CurrentThread);
@@ -301,7 +302,7 @@ namespace VeeamSoftware_test
         {
             foreach (var thread in threads)
             {
-                if (thread.IsAlive && threadsEvent[thread.ManagedThreadId].WaitOne(0) == false)
+                if (thread.IsAlive && !threadsEvent[thread.ManagedThreadId].WaitOne(0))
                 {
                     threadsEvent[thread.ManagedThreadId].Set();
                     return true;
