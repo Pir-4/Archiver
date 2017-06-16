@@ -29,6 +29,7 @@ namespace VeeamSoftware_test.GZipDriver
 
                     int blockIndex = i;
                     byte[] readBuffer = new byte[BlockSize];
+                    _bufferQueue.WaitOne();
                     int bytesread = sourceStream.Read(readBuffer, 0, readBuffer.Length);
                     if (bytesread < BlockSize)
                         Array.Resize(ref readBuffer, bytesread);
@@ -72,11 +73,6 @@ namespace VeeamSoftware_test.GZipDriver
                 }
 
                 _bufferQueue.Enqueue(blockIndex, comressBuffer);
-               // _writeResetEvent.Set();
-
-                // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
-                // необходимо вручную очистить данные буфера из Large Object Heap 
-               // GC.Collect();
             }
             catch (Exception ex)
             {

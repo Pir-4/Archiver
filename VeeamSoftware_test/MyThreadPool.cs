@@ -181,6 +181,7 @@ namespace VeeamSoftware_test
         {
             lock (threads)
             {
+                _isStoping = true;
                 foreach (var thread in threads)
                 {
                     lock (_isBreakLock)
@@ -227,10 +228,10 @@ namespace VeeamSoftware_test
 
                 }
             }
-            /*catch (Exception e)
+            catch (Exception e)
             {
                 throw e;
-            }*/
+            }
             finally
             {
                 ClearThread(Thread.CurrentThread);

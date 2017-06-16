@@ -46,6 +46,7 @@ namespace VeeamSoftware_test.GZipDriver
                     _readSemaphore.WaitOne();
                     lock (_queuePositionBlock)
                     {
+                        _bufferQueue.WaitOne();
                         long tmpPosition = _queuePositionBlock.Dequeue();
                         if (tmpPosition == -1 || isBreak)
                             break;

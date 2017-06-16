@@ -83,6 +83,7 @@ namespace VeeamSoftware_test.GZipDriver
                         {
                             outputStream.Write(buffer, 0, buffer.Length);
                             outputStream.Flush();
+                            _bufferQueue.Release();
                         }
                     }
                 }

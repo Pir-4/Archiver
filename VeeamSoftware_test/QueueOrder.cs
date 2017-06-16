@@ -20,7 +20,7 @@ namespace VeeamSoftware_test
 
         private Semaphore _semaphoreEnqueue;
 
-        ManualResetEvent _addEvent = new ManualResetEvent(false);
+        AutoResetEvent _addEvent = new AutoResetEvent(false);
 
         public QueueOrder(int maxSize = 15)
         {
@@ -36,7 +36,6 @@ namespace VeeamSoftware_test
         /// для основного порядкового номера</param>
         public void Enqueue(int order, int subOrder, T item, bool lastSubOrder = false)
         {
-            _semaphoreEnqueue.WaitOne();
             lock (_queueDictionary)
             {
                 QueuOrder queuOrder = new QueuOrder(order, subOrder);
@@ -66,7 +65,7 @@ namespace VeeamSoftware_test
             item = default(T);
             while (true)
             {
-                if(!isEnd)
+                if (!isEnd)
                     _addEvent.WaitOne();
 
                 lock (_queueDictionary)
@@ -85,18 +84,27 @@ namespace VeeamSoftware_test
                         {
                             Interlocked.Increment(ref _currentSubOrder);
                         }
-                        _semaphoreEnqueue.Release();
                         _addEvent.Set();
                         return true;
                     }
-                    else if(isEnd && Size == 0)
+                    else if (isEnd && Size == 0)
                         break;
                 }
             }
             return false;
         }
 
-        public int Size {
+        public void WaitOne()
+        {
+            _semaphoreEnqueue.WaitOne();
+        }
+
+        public void Release()
+        {
+            _semaphoreEnqueue.Release();
+        }
+        public int Size
+        {
             get
             {
                 lock (_queueDictionary)
@@ -121,5 +129,5 @@ namespace VeeamSoftware_test
             }
         }
     }
-    
+
 }
