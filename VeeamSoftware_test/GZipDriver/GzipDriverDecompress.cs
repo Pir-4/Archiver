@@ -38,7 +38,8 @@ namespace VeeamSoftware_test.GZipDriver
                 sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
                     BlockSizeRead, FileOptions.Asynchronous);
 
-                
+                _threadPool.Start();
+
                 int blockIndex = 0;
                 while (true)
                 {
@@ -50,7 +51,7 @@ namespace VeeamSoftware_test.GZipDriver
                             break;
 
                         int tmpBlcokIndex = blockIndex;
-                        _threadPool.Execute(new Task(() => DecompressBlock(tmpPosition, tmpBlcokIndex)));
+                        _threadPool.Execute(() => DecompressBlock(tmpPosition, tmpBlcokIndex));
                         blockIndex++;
                     }
                 }
@@ -101,7 +102,6 @@ namespace VeeamSoftware_test.GZipDriver
                                 Array.Resize(ref nextBuffer, bytesread);
 
                             _bufferQueue.Enqueue(blockIndex, bufferNumber, buffer, nextBuffer.Length == 0);
-                            //_writeResetEvent.Set();
                             buffer = nextBuffer;
                             bufferNumber++;
                         }

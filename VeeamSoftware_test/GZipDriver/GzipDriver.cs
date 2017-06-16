@@ -19,7 +19,7 @@ namespace VeeamSoftware_test.GZipDriver
         private readonly Thread _outputThread;
 
         protected int countTreadsOfObject;
-        protected MyThreadPool _threadPool;
+        protected IMyThreadPool _threadPool;
         protected QueueOrder<byte[]> _bufferQueue = new QueueOrder<byte[]>();
         private List<Exception> _exceptions = new List<Exception>();
 
@@ -55,8 +55,6 @@ namespace VeeamSoftware_test.GZipDriver
 
             _sourceThread.Join();
             _outputThread.Join();
-           // _threadPool.Dispose();
-
         }
 
         public List<Exception> Exceptions
@@ -71,12 +69,11 @@ namespace VeeamSoftware_test.GZipDriver
         {
             try
             {
-               // _writeResetEvent.WaitOne();
                 using (
                     FileStream outputStream = new FileStream(_outputFilePath, FileMode.Create, FileAccess.Write,
                         FileShare.Read, BlockSize, FileOptions.Asynchronous))
                 {
-                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || !_threadPool.isEmpty)
+                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || !_threadPool.isWork)
                     {
                         if (isBreak)
                             break;
@@ -97,7 +94,7 @@ namespace VeeamSoftware_test.GZipDriver
             }
             finally
             {
-                _threadPool.Stop();
+                _threadPool.Free();
                 sourceStream.Close();
                 _autoResetEvent.Set();
             }

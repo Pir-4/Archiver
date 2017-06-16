@@ -20,11 +20,13 @@ namespace VeeamSoftware_test
         bool UpCountTreaads();
         bool DownCountThreads();
 
+        void Free();
+
     }
     /// <summary>
     /// Пул потоков. В нем задачи запускаются по приоритетам. Если количество потоков больше или равно 4, то на каждые 3 задачи с высоким приоритетом - будет запущена задача с нормальным приоритетом. Если количество потоков меньше 4, тогда задачи выполняются прямо следуя приоритетам. Задачи с низким приоритетом выполняются в последнюю очередь.
     /// </summary>
-    public class MyThreadPool /*: IDisposable*/
+    public class MyThreadPool : IMyThreadPool, IDisposable
     {
 
         private int _maxCountThreads;
@@ -36,9 +38,6 @@ namespace VeeamSoftware_test
         private Dictionary<int, AutoResetEvent> threadsEvent;
         private List<Thread> threads;
         private Queue<Task> tasks;
-
-        private Semaphore _semaphoreQueue;
-
 
         /// <summary>
         /// Создает пул потоков с количеством потоков равным количеству ядер процессора.
@@ -56,8 +55,6 @@ namespace VeeamSoftware_test
 
             this._maxCountThreads = maxCountThreads;
 
-            _semaphoreQueue = new Semaphore(this._maxCountThreads * 2, this._maxCountThreads * 2);
-
             this.threads = new List<Thread>();
             this.threadsEvent = new Dictionary<int, AutoResetEvent>(maxCountThreads);
             this.tasks = new Queue<Task>();
@@ -67,7 +64,7 @@ namespace VeeamSoftware_test
         /// </summary>
         ~MyThreadPool()
         {
-            //Dispose(true);
+            Dispose(true);
         }
 
         public void Start()
@@ -78,6 +75,16 @@ namespace VeeamSoftware_test
 
                 foreach (var thread in threads)
                     threadsEvent[thread.ManagedThreadId].Set();
+            }
+
+            for (int i = 0; i < tasks.Where(t => !t.IsRunned).Count(); i++)
+            {
+                lock (threads)
+                {
+                    if (threads.Count == _maxCountThreads)
+                        break;
+                }
+                CreatedThread();
             }
         }
         public void Stop()
@@ -94,7 +101,6 @@ namespace VeeamSoftware_test
         {
             lock (tasks)
             {
-                _semaphoreQueue.WaitOne();
                 tasks.Enqueue(new Task(action));
             }
             CreatedThread();
@@ -133,8 +139,8 @@ namespace VeeamSoftware_test
                 }
             }
         }
-        
 
+        #region Управление максимальным количеством Threds
         /// <summary>
         /// Увеличивает количество максимально доступных потоков
         /// </summary>
@@ -155,20 +161,41 @@ namespace VeeamSoftware_test
         {
             lock (threads)
             {
+                if (threads.Count == 0)
+                    return false;
+
                 lock (_isBreakLock)
                 {
                     _isBreak = true;
-                }
-                Interlocked.Decrement(ref _maxCountThreads);
-                lock (_semaphoreQueue)
-                {
-                    int currentValue =  (_semaphoreQueue.Release(), _maxCountThreads*2);
-                    _semaphoreQueue = new Semaphore(Math.m(currentValue, _maxCountThreads), _maxCountThreads*2);
+                    Interlocked.Decrement(ref _maxCountThreads);
                 }
                 return true;
             }
         }
+        #endregion
+        /// <summary>
+        /// Очищение Pool-а от всех объектов Thread
+        /// </summary>
+        public void Free()
+        {
+            lock (threads)
+            {
+                foreach (var thread in threads)
+                {
+                    lock (_isBreakLock)
+                    {
+                        _isBreak = true;
+                        threadsEvent[thread.ManagedThreadId].Set();
+                    }
+                }
+            }
+           
+        }
 
+        #region Выполнение задач
+        /// <summary>
+        /// Функция потока в которой идет выполенение поставленных задач
+        /// </summary>
         private void ThreadWork()
         {
             try
@@ -176,9 +203,6 @@ namespace VeeamSoftware_test
                 while (true)
                 {
                     threadsEvent[Thread.CurrentThread.ManagedThreadId].WaitOne();
-
-                    if (_isStoping)
-                        continue;
 
                     lock (_isBreakLock)
                     {
@@ -188,7 +212,9 @@ namespace VeeamSoftware_test
                             break;
                         }
                     }
-                    
+
+                    if (_isStoping)
+                        continue;
 
                     Task task = SelectTask();
 
@@ -196,7 +222,6 @@ namespace VeeamSoftware_test
                         continue;
 
                     task.Execute();
-                    _semaphoreQueue.Release();
                     threadsEvent[Thread.CurrentThread.ManagedThreadId].Set();
 
                 }
@@ -212,7 +237,11 @@ namespace VeeamSoftware_test
 
         }
 
-        #region Управление задачами
+      
+        /// <summary>
+        /// Функция поулчения Task
+        /// </summary>
+        /// <returns>null если очередь пуста</returns>
         private Task SelectTask()
         {
             lock (tasks)
@@ -280,7 +309,10 @@ namespace VeeamSoftware_test
             }
             return false;
         }
-
+        /// <summary>
+        /// Удаляет и завершает поток и его события из всех списков
+        /// </summary>
+        /// <param name="thread">Удаляемый поток</param>
         private void ClearThread(Thread thread)
         {
             lock (threads)
@@ -295,23 +327,14 @@ namespace VeeamSoftware_test
 
         #endregion
 
-        #region Остановка и унитожение Pool
+        #region Уничтожение Pool
         /// <summary>
         /// Высвобождает ресурсы, которые используются пулом потоков.
         /// </summary>
         /// <param name="disposing"></param>
          protected virtual void Dispose(bool dis)
          {
-             lock (threads)
-             {
-                 if (_isDispose)
-                     return;
-
-                 foreach (Thread thread in threads)
-                 {
-                     threadsEvent[thread.ManagedThreadId].Close();
-                 }
-             }
+            Free();
          }
 
         /// <summary>

@@ -21,7 +21,7 @@ namespace VeeamSoftware_test.GZipDriver
                 sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
                     BlockSize,
                     FileOptions.Asynchronous);
-
+                _threadPool.Start();
                 for (int i = 0; i < (int) Math.Ceiling((double) sourceStream.Length / BlockSize); i++)
                 {
                     if (isBreak)
@@ -33,7 +33,7 @@ namespace VeeamSoftware_test.GZipDriver
                     if (bytesread < BlockSize)
                         Array.Resize(ref readBuffer, bytesread);
 
-                    _threadPool.Execute(new Task(() => CompressBlock(readBuffer, blockIndex)));
+                    _threadPool.Execute(() => CompressBlock(readBuffer, blockIndex));
                 }
             }
             catch (Exception ex)
