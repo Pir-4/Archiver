@@ -124,7 +124,7 @@ namespace VeeamSoftware_test
             {
                 lock (threadsEvent)
                 {
-                    return threadsEvent.Where(kvp => kvp.Value.WaitOne(0)).Count() > 0;
+                    return (threadsEvent.Where(kvp => kvp.Value.WaitOne(0,false)).Count() > 0);
                 }
             }
         }
@@ -303,7 +303,7 @@ namespace VeeamSoftware_test
         {
             foreach (var thread in threads)
             {
-                if (thread.IsAlive && !threadsEvent[thread.ManagedThreadId].WaitOne(0))
+                if (thread.IsAlive && !threadsEvent[thread.ManagedThreadId].WaitOne(0,false))
                 {
                     threadsEvent[thread.ManagedThreadId].Set();
                     return true;

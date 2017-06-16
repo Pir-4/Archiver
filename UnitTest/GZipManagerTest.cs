@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using VeeamSoftware_test.Gzip;
@@ -83,5 +84,18 @@ namespace UnitTest
 
             File.Delete(outputFile);
         }
+
+        [TestMethod]
+        public void AutoResetEventTest()
+        {
+            AutoResetEvent evt = new AutoResetEvent(true);
+
+            evt.WaitOne();
+            bool set = evt.WaitOne(0, false);
+
+            evt.Set();
+
+            bool nowSet = evt.WaitOne(0, false);
+    }
     }
 }
