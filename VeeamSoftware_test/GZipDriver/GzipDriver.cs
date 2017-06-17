@@ -29,7 +29,6 @@ namespace VeeamSoftware_test.GZipDriver
         protected Stream sourceStream;
 
         private static readonly AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
-        protected  AutoResetEvent _writeResetEvent = new AutoResetEvent(false);
 
         protected GzipDriver()
         {

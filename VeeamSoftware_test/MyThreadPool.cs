@@ -6,24 +6,7 @@ using System.Threading;
 
 namespace VeeamSoftware_test
 {
-    public interface IMyThreadPool
-    {
-        void Start();
-        void Stop();
-
-        void Execute(Action action);
-        void Execute(IEnumerable<Action> actions);
-
-        bool isWork { get; }
-        bool isEmpty { get; }
-
-        bool UpCountTreaads();
-        bool DownCountThreads();
-
-        void Free();
-
-    }
-    /// <summary>
+   /// <summary>
     /// Пул потоков. В нем задачи запускаются по приоритетам. Если количество потоков больше или равно 4, то на каждые 3 задачи с высоким приоритетом - будет запущена задача с нормальным приоритетом. Если количество потоков меньше 4, тогда задачи выполняются прямо следуя приоритетам. Задачи с низким приоритетом выполняются в последнюю очередь.
     /// </summary>
     public class MyThreadPool : IMyThreadPool, IDisposable
@@ -89,6 +72,7 @@ namespace VeeamSoftware_test
                 CreatedThread();
             }
         }
+
         public void Stop()
         {
             lock (threads)
@@ -256,7 +240,7 @@ namespace VeeamSoftware_test
 
         #endregion
         
-        #region Управление зпуском и созданием потоков
+        #region Управление запуском и созданием потоков
         /// <summary>
         /// Управляет запуском потоков
         /// </summary>
