@@ -31,10 +31,9 @@ namespace VeeamSoftware_test.GZipDriver
         protected override void ReadStream()
         {
             Thread positionThread = new Thread(SearchStartPositionBlock);
-            positionThread.Start();
-
             try
             {
+                positionThread.Start();
                 sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
                     BlockSizeRead, FileOptions.Asynchronous);
 
@@ -65,9 +64,9 @@ namespace VeeamSoftware_test.GZipDriver
             }
             finally
             {
-                _threadPool.UpCountTreaads();
                 _bufferQueue.isEnd = true;
-                GC.Collect();
+                _threadPool.UpCountTreaads();
+                positionThread.Join();
             }
 
         }
@@ -84,7 +83,7 @@ namespace VeeamSoftware_test.GZipDriver
                 lock (sourceStream)
                 {
                     sourceStream.Seek(startPosition, SeekOrigin.Begin);
-                    using (var gzipStream = new GZipStream(sourceStream, CompressionMode.Decompress,true))
+                    using (var gzipStream = new GZipStream(sourceStream, CompressionMode.Decompress, true))
                     {
                         int bufferNumber = 0;
                         byte[] buffer = new byte[BlockSize];
@@ -120,11 +119,10 @@ namespace VeeamSoftware_test.GZipDriver
 
         private void SearchStartPositionBlock()
         {
-
             try
             {
-                using (Stream localSourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read,
-                    FileShare.Read,
+                using (Stream localSourceStream = new FileStream(_soutceFilePath,
+                    FileMode.Open, FileAccess.Read, FileShare.Read,
                     BlockSizeRead, FileOptions.Asynchronous))
                 {
                     if (localSourceStream.StartsWith(gzipHeader))
@@ -153,11 +151,7 @@ namespace VeeamSoftware_test.GZipDriver
             }
             finally
             {
-                Thread.CurrentThread.Join();
                 _threadPool.UpCountTreaads();
-                // Размер буфера превышает ограничение сборщика мусора 85000 байтов, 
-                // необходимо вручную очистить данные буфера из Large Object Heap 
-                GC.Collect();
             }
         }
 

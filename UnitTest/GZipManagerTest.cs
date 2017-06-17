@@ -84,18 +84,5 @@ namespace UnitTest
 
             File.Delete(outputFile);
         }
-
-        [TestMethod]
-        public void AutoResetEventTest()
-        {
-            AutoResetEvent evt = new AutoResetEvent(true);
-
-            evt.WaitOne();
-            bool set = evt.WaitOne(0, false);
-
-            evt.Set();
-
-            bool nowSet = evt.WaitOne(0, false);
-    }
     }
 }

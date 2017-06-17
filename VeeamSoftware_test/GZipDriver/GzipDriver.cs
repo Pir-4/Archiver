@@ -73,7 +73,7 @@ namespace VeeamSoftware_test.GZipDriver
                     FileStream outputStream = new FileStream(_outputFilePath, FileMode.Create, FileAccess.Write,
                         FileShare.Read, BlockSize, FileOptions.Asynchronous))
                 {
-                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || !_threadPool.isWork)
+                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || _threadPool.isWork)
                     {
                         if (isBreak)
                             break;
