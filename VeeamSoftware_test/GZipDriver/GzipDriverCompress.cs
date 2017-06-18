@@ -29,7 +29,7 @@ namespace VeeamSoftware_test.GZipDriver
 
                     int blockIndex = i;
                     byte[] readBuffer = new byte[BlockSize];
-                    _bufferQueue.WaitOne();
+                    BufferMyQueue.WaitOne();
                     int bytesread = sourceStream.Read(readBuffer, 0, readBuffer.Length);
                     if (bytesread < BlockSize)
                         Array.Resize(ref readBuffer, bytesread);
@@ -45,7 +45,7 @@ namespace VeeamSoftware_test.GZipDriver
             finally
             {
                 _threadPool.UpCountTreaads();
-                _bufferQueue.isEnd = true;
+                BufferMyQueue.isEnd = true;
                 GC.Collect();
             }
 
@@ -72,7 +72,7 @@ namespace VeeamSoftware_test.GZipDriver
                     comressBuffer = memoryStream.GetBufferWithoutZeroTail();
                 }
 
-                _bufferQueue.Enqueue(blockIndex, comressBuffer);
+                BufferMyQueue.Enqueue(blockIndex, comressBuffer);
             }
             catch (Exception ex)
             {

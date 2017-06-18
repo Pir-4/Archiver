@@ -45,7 +45,7 @@ namespace VeeamSoftware_test.GZipDriver
                     _readSemaphore.WaitOne();
                     lock (_queuePositionBlock)
                     {
-                        _bufferQueue.WaitOne();
+                        BufferMyQueue.WaitOne();
                         long tmpPosition = _queuePositionBlock.Dequeue();
                         if (tmpPosition == -1 || isBreak)
                             break;
@@ -64,7 +64,7 @@ namespace VeeamSoftware_test.GZipDriver
             }
             finally
             {
-                _bufferQueue.isEnd = true;
+                BufferMyQueue.isEnd = true;
                 _threadPool.UpCountTreaads();
                 positionThread.Join();
             }
@@ -101,7 +101,7 @@ namespace VeeamSoftware_test.GZipDriver
                             if (bytesread < BlockSize)
                                 Array.Resize(ref nextBuffer, bytesread);
 
-                            _bufferQueue.Enqueue(blockIndex, bufferNumber, buffer, nextBuffer.Length == 0);
+                            BufferMyQueue.Enqueue(blockIndex, bufferNumber, buffer, nextBuffer.Length == 0);
                             buffer = nextBuffer;
                             bufferNumber++;
                         }

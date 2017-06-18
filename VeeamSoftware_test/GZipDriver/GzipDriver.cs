@@ -20,7 +20,7 @@ namespace VeeamSoftware_test.GZipDriver
 
         protected int countTreadsOfObject;
         protected IMyThreadPool _threadPool;
-        protected QueueOrder<byte[]> _bufferQueue = new QueueOrder<byte[]>();
+        protected MyQueue<byte[]> BufferMyQueue = new MyQueue<byte[]>();
         private List<Exception> _exceptions = new List<Exception>();
 
         protected string _soutceFilePath;
@@ -72,17 +72,17 @@ namespace VeeamSoftware_test.GZipDriver
                     FileStream outputStream = new FileStream(_outputFilePath, FileMode.Create, FileAccess.Write,
                         FileShare.Read, BlockSize, FileOptions.Asynchronous))
                 {
-                    while (_sourceThread.IsAlive || _bufferQueue.Size > 0 || _threadPool.isWork)
+                    while (_sourceThread.IsAlive || BufferMyQueue.Size > 0 || _threadPool.isWork)
                     {
                         if (isBreak)
                             break;
 
                         byte[] buffer;
-                        if (_bufferQueue.TryGetValue(out buffer))
+                        if (BufferMyQueue.TryGetValue(out buffer))
                         {
                             outputStream.Write(buffer, 0, buffer.Length);
                             outputStream.Flush();
-                            _bufferQueue.Release();
+                            BufferMyQueue.Release();
                         }
                     }
                 }
