@@ -18,7 +18,7 @@ namespace VeeamSoftware_test
         private bool _isBreak;
         private readonly object _isBreakLock = new object();
 
-        private Dictionary<int, AutoResetEvent> threadsEvent;
+        private Dictionary<int, ManualResetEvent> threadsEvent;
         private Dictionary<int, bool> threadsWork;
         private List<Thread> threads;
         private Queue<Task> tasks;
@@ -40,7 +40,7 @@ namespace VeeamSoftware_test
             this._maxCountThreads = maxCountThreads;
 
             this.threads = new List<Thread>();
-            this.threadsEvent = new Dictionary<int, AutoResetEvent>(maxCountThreads);
+            this.threadsEvent = new Dictionary<int, ManualResetEvent>(maxCountThreads);
             this.threadsWork = new Dictionary<int, bool>(_maxCountThreads);
             this.tasks = new Queue<Task>();
         }
@@ -109,7 +109,8 @@ namespace VeeamSoftware_test
             {
                 lock (threadsWork)
                 {
-                    return (threadsWork.Where(kvp => kvp.Value).Count()>0);
+                   // return (threadsWork.Where(kvp => kvp.Value).Count()>0);
+                    return threadsEvent.Where(kvp => kvp.Value.WaitOne(0) == false).Count() > 0;
                 }
             }
         }
@@ -196,21 +197,27 @@ namespace VeeamSoftware_test
                     {
                         if (_isBreak)
                         {
-                            _isBreak = false;
+                           // _isBreak = false;
                             break;
                         }
                     }
 
                     if (_isStoping)
+                    {
+                        threadsEvent[Thread.CurrentThread.ManagedThreadId].Reset();
                         continue;
+                    }
 
                     Task task = SelectTask();
 
                     if (task == null)
+                    {
+                        threadsEvent[Thread.CurrentThread.ManagedThreadId].Reset();
                         continue;
+                    }
 
                     task.Execute();
-                    threadsEvent[Thread.CurrentThread.ManagedThreadId].Set();
+                   // threadsEvent[Thread.CurrentThread.ManagedThreadId].Set();
 
                 }
             }
@@ -270,7 +277,7 @@ namespace VeeamSoftware_test
                     IsBackground = true
                 });
 
-                threadsEvent.Add(threads[currentCountTreads].ManagedThreadId, new AutoResetEvent(false));
+                threadsEvent.Add(threads[currentCountTreads].ManagedThreadId, new ManualResetEvent(false));
                 threadsWork.Add(threads[currentCountTreads].ManagedThreadId,false);
                 threadsEvent[threads[currentCountTreads].ManagedThreadId].Set();
                 threads[currentCountTreads].Start();
@@ -289,7 +296,7 @@ namespace VeeamSoftware_test
         {
             foreach (var thread in threads)
             {
-                if (thread.IsAlive && !threadsWork[thread.ManagedThreadId])
+                if (thread.IsAlive && threadsEvent[thread.ManagedThreadId].WaitOne(0) == false/*!threadsWork[thread.ManagedThreadId].*/)
                 {
                     threadsEvent[thread.ManagedThreadId].Set();
                     return true;
