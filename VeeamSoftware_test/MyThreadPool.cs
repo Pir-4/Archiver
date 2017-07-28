@@ -56,7 +56,7 @@ namespace VeeamSoftware_test
         {
             lock (threads)
             {
-                _isStoping = false;
+                _isBreak =_isStoping = false;
 
                 foreach (var thread in threads)
                     threadsEvent[thread.ManagedThreadId].Set();
@@ -109,8 +109,9 @@ namespace VeeamSoftware_test
             {
                 lock (threadsWork)
                 {
-                   // return (threadsWork.Where(kvp => kvp.Value).Count()>0);
-                    return threadsEvent.Where(kvp => kvp.Value.WaitOne(0) == false).Count() > 0;
+                    bool t = (threadsWork.Where(kvp => kvp.Value).Count()>0);
+                     //bool t = threadsEvent.Where(kvp => kvp.Value.WaitOne(0) == false).Count() > 0;
+                    return t;
                 }
             }
         }
@@ -170,9 +171,10 @@ namespace VeeamSoftware_test
                 _isStoping = true;
                 foreach (var thread in threads)
                 {
+                    _isBreak = true;
                     lock (_isBreakLock)
                     {
-                        _isBreak = true;
+                       // _isBreak = true;
                         threadsEvent[thread.ManagedThreadId].Set();
                     }
                 }
