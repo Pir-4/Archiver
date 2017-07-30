@@ -19,7 +19,7 @@ namespace VeeamSoftware_test
         private readonly object _isBreakLock = new object();
 
         private Dictionary<int, ManualResetEvent> threadsEvent;
-        private Dictionary<int, bool> threadsWork;
+
         private List<Thread> threads;
         private Queue<Task> tasks;
 
@@ -41,7 +41,7 @@ namespace VeeamSoftware_test
 
             this.threads = new List<Thread>();
             this.threadsEvent = new Dictionary<int, ManualResetEvent>(maxCountThreads);
-            this.threadsWork = new Dictionary<int, bool>(_maxCountThreads);
+
             this.tasks = new Queue<Task>();
         }
         /// <summary>
@@ -107,11 +107,9 @@ namespace VeeamSoftware_test
         {
             get
             {
-                lock (threadsWork)
+                lock (threads)
                 {
-                    bool t = (threadsWork.Where(kvp => kvp.Value).Count()>0);
-                     //bool t = threadsEvent.Where(kvp => kvp.Value.WaitOne(0) == false).Count() > 0;
-                    return t;
+                    return threads.Where(th => th.ThreadState.Equals(ThreadState.Running)).Count() > 0;
                 }
             }
         }
@@ -192,14 +190,11 @@ namespace VeeamSoftware_test
             {
                 while (true)
                 {
-                    threadsWork[Thread.CurrentThread.ManagedThreadId] = false;
                     threadsEvent[Thread.CurrentThread.ManagedThreadId].WaitOne();
-                    threadsWork[Thread.CurrentThread.ManagedThreadId] = true;
                     lock (_isBreakLock)
                     {
                         if (_isBreak)
                         {
-                           // _isBreak = false;
                             break;
                         }
                     }
@@ -280,7 +275,6 @@ namespace VeeamSoftware_test
                 });
 
                 threadsEvent.Add(threads[currentCountTreads].ManagedThreadId, new ManualResetEvent(false));
-                threadsWork.Add(threads[currentCountTreads].ManagedThreadId,false);
                 threadsEvent[threads[currentCountTreads].ManagedThreadId].Set();
                 threads[currentCountTreads].Start();
 
@@ -298,7 +292,7 @@ namespace VeeamSoftware_test
         {
             foreach (var thread in threads)
             {
-                if (thread.IsAlive && threadsEvent[thread.ManagedThreadId].WaitOne(0) == false/*!threadsWork[thread.ManagedThreadId].*/)
+                if (thread.IsAlive && thread.ThreadState.Equals(ThreadState.Suspended))
                 {
                     threadsEvent[thread.ManagedThreadId].Set();
                     return true;
@@ -317,7 +311,6 @@ namespace VeeamSoftware_test
                 threads.Remove(thread);
                 threadsEvent[thread.ManagedThreadId].Close();
                 threadsEvent.Remove(thread.ManagedThreadId);
-                threadsWork.Remove(thread.ManagedThreadId);
                 thread.Join();
             }
         }
