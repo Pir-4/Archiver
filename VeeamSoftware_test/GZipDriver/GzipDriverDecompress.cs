@@ -28,6 +28,9 @@ namespace VeeamSoftware_test.GZipDriver
             countTreadsOfObject += 2;
         }
 
+        /// <summary>
+        /// Чтение данных из файла
+        /// </summary>
         protected override void ReadStream()
         {
             Thread positionThread = new Thread(SearchStartPositionBlock);

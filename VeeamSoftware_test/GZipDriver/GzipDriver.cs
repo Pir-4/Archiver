@@ -64,6 +64,9 @@ namespace VeeamSoftware_test.GZipDriver
 
         protected abstract void ReadStream();
 
+        /// <summary>
+        /// Зпись  данных в выходной файл
+        /// </summary>
         private void WriteStream()
         {
             try

@@ -14,6 +14,9 @@ namespace VeeamSoftware_test.GZipDriver
         {
             countTreadsOfObject++;
         }
+        /// <summary>
+        /// Чтение данных из файла 
+        /// </summary>
         protected override void ReadStream()
         {
             try

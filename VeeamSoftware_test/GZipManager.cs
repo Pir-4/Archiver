@@ -9,15 +9,6 @@ using VeeamSoftware_test.GZipDriver;
 
 namespace VeeamSoftware_test.Gzip
 {
-    public interface IGZipManager
-    {
-        void Execute();
-        string Act { get; }
-        string SourceFile { get;}
-        string ResultFile { get;}
-        List<Exception> Exceptions();
-    }
-
     public abstract class GZipManager : IGZipManager
     {
         public const string Compress = "compress";
