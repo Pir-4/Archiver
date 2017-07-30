@@ -45,6 +45,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="IGZipManager.cs" />
     <Compile Include="IMyThreadPool.cs" />
     <Compile Include="MyThreadPool.cs" />
     <Compile Include="GZipDriver\GzipDriver.cs" />
