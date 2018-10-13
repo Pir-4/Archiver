@@ -46,8 +46,8 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="IGZipManager.cs" />
-    <Compile Include="IMyThreadPool.cs" />
-    <Compile Include="MyThreadPool.cs" />
+    <Compile Include="ThreadPool\IMyThreadPool.cs" />
+    <Compile Include="ThreadPool\MyThreadPool.cs" />
     <Compile Include="GZipDriver\GzipDriver.cs" />
     <Compile Include="GZipDriver\GzipDriverCompress.cs" />
     <Compile Include="GZipDriver\GzipDriverDecompress.cs" />
