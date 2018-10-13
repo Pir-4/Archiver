@@ -9,6 +9,7 @@ using System.IO.Compression;
 using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using VeeamSoftware_test.Gzip;
+using VeeamSoftware_test.ThreadPool;
 
 namespace VeeamSoftware_test.GZipDriver
 {
@@ -23,10 +24,13 @@ namespace VeeamSoftware_test.GZipDriver
         private readonly SyncronizedQueue<byte[]> _readQueue;
         private readonly SyncronizedQueue<byte[]> _writeQueue;
 
+        private readonly IMyThreadPool _threadPool;
         protected GzipDriver()
         {
             _readQueue = new SyncronizedQueue<byte[]>();
             _writeQueue = new SyncronizedQueue<byte[]>();
+
+            _threadPool = new MyThreadPool();
         }
 
         public void Execute(string inputPath, string outputPath)
@@ -34,7 +38,14 @@ namespace VeeamSoftware_test.GZipDriver
             SourceFilePath = inputPath;
             OutputFilePath = outputPath;
 
-            //Todo сделать многопоточность
+            _threadPool.Add(this.Read);
+            _threadPool.Add(this.Write);
+
+            var maxThreadCount = Environment.ProcessorCount - _threadPool.Count;
+            maxThreadCount = maxThreadCount > 0 ? maxThreadCount : 1;
+            Enumerable.Range(1, maxThreadCount).ToList().ForEach(_ => _threadPool.Add(this.Process));
+
+            _threadPool.Execute();
         }
 
         public List<Exception> Exceptions { get; set; } = new List<Exception>();
