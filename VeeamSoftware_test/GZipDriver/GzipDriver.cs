@@ -36,8 +36,6 @@ namespace VeeamSoftware_test.GZipDriver
             _outputThread = new Thread(WriteStream);
 
             countTreadsOfObject = 1;
-            
-
         }
 
         public void Execute(string inputPath, string outputPath)

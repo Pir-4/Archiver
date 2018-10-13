@@ -19,7 +19,7 @@ namespace VeeamSoftware_test.Gzip
         private string _sourceFile;
         private string _resultFile;
 
-        public static IGZipManager create(string act, string inputFile, string outputfile)
+        public static IGZipManager Сreate(string act, string inputFile, string outputfile)
         {
             if (act.ToLower().Equals(Compress))
                 return new GZipManagerCompress(inputFile, outputfile);
@@ -50,6 +50,7 @@ namespace VeeamSoftware_test.Gzip
             get { return _sourceFile; }
             private set { _sourceFile = value; }
         }
+
         public string ResultFile
         {
             get { return _resultFile; }

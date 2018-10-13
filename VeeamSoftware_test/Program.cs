@@ -84,7 +84,7 @@ namespace VeeamSoftware_test
             if (!Directory.Exists(Path.GetDirectoryName(argv[2])))
                 throw new ArgumentException("Please enter correct directory output file.");
 
-            IGZipManager result = GZipManager.create(argv[0], argv[1], argv[2]);
+            IGZipManager result = GZipManager.Сreate(argv[0], argv[1], argv[2]);
 
             if (result == null)
                 throw new ArgumentException(String.Format("Please use \"{0}\" and \"{1}\" commands only as the first parameter.", GZipManager.Compress, GZipManager.Decompress));
