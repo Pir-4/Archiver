@@ -60,25 +60,20 @@ namespace VeeamSoftware_test.Gzip
 
     public class GZipManagerCompress : GZipManager
     {
-        public GZipManagerCompress(string inputFile, string outputfile) : base( inputFile, outputfile)
+        public GZipManagerCompress(string inputFile, string outputfile) : base(inputFile, outputfile)
         {
             Driver = new GzipDriverCompress();
         }
-        public override string Act
-        {
-            get { return Compress; }
-        }
+        public override string Act => Compress;
     }
+
     public class GZipManagerDecompress : GZipManager
     {
         public GZipManagerDecompress(string inputFile, string outputfile) : base(inputFile, outputfile)
         {
             Driver = new GzipDriverDecompress();
         }
-        public override string Act
-        {
-            get { return Decompress; }
-        }
+        public override string Act => Decompress;
     }
 
 }
