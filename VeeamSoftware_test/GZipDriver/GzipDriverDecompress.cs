@@ -11,161 +11,29 @@ namespace VeeamSoftware_test.GZipDriver
 {
     public class GzipDriverDecompress : GzipDriver
     {
-        /// <summary>
-        /// Заголовок из массива байтов, который записывается с помощью GZipStream
-        /// в начало каждого сжатого блока данных.
-        /// Содержимое заголовка соответсвует RFC для формата GZip (https://www.ietf.org/rfc/rfc1952.txt).
-        /// </summary>
-        private readonly byte[] gzipHeader = new byte[] { 31, 139, 8, 0, 0, 0, 0, 0, 4, 0 };
-
-        private const int BlockSizeRead = 1024 * 1024;
-
-        private Semaphore _readSemaphore = new Semaphore(0, Int32.MaxValue);
-        private Queue<long> _queuePositionBlock = new Queue<long>();
-
-        public GzipDriverDecompress() : base()
+        protected override int GetBlockLength(Stream stream)
         {
-            countTreadsOfObject += 2;
+            var startPosition = stream.Position;
+            var blockLengthBytes = new byte[8];
+            stream.Read(blockLengthBytes, 0, blockLengthBytes.Length);
+            var blockLength = BitConverter.ToInt32(blockLengthBytes, 4);//TODO ?
+            stream.Position = startPosition;
+            return blockLength;
         }
 
-        /// <summary>
-        /// Чтение данных из файла
-        /// </summary>
-        protected override void ReadStream()
+        protected override byte[] ProcessBlcok(byte[] input)
         {
-            Thread positionThread = new Thread(SearchStartPositionBlock);
-            try
+            using (var sourceStream = new MemoryStream(input))
             {
-                positionThread.Start();
-                sourceStream = new FileStream(_soutceFilePath, FileMode.Open, FileAccess.Read, FileShare.Read,
-                    BlockSizeRead, FileOptions.Asynchronous);
-
-                _threadPool.Start();
-
-                int blockIndex = 0;
-                while (true)
+                using (var targetStream = new MemoryStream())
                 {
-                    _readSemaphore.WaitOne();
-                    lock (_queuePositionBlock)
+                    using (var decompressionStream = new GZipStream(sourceStream, CompressionMode.Decompress))
                     {
-                        BufferMyQueue.WaitOne();
-                        long tmpPosition = _queuePositionBlock.Dequeue();
-                        if (tmpPosition == -1 || isBreak)
-                            break;
-
-                        int tmpBlcokIndex = blockIndex;
-                        _threadPool.Execute(() => DecompressBlock(tmpPosition, tmpBlcokIndex));
-                        blockIndex++;
+                        decompressionStream.CopyTo(targetStream);
+                        return targetStream.ToArray();
                     }
                 }
-
-            }
-            catch (Exception ex)
-            {
-
-                Exceptions.Add(ex);
-            }
-            finally
-            {
-                BufferMyQueue.isEnd = true;
-                _threadPool.UpCountTreaads();
-                positionThread.Join();
-            }
-
-        }
-
-        /// <summary>
-        /// Декомпрессия отдельного блока данных
-        /// </summary>
-        /// <param name="startPosition">Смещение от начала файла</param>
-        /// <param name="blockIndex">Порядок блока</param>
-        private void DecompressBlock(long startPosition, int blockIndex)
-        {
-            try
-            {
-                lock (sourceStream)
-                {
-                    sourceStream.Seek(startPosition, SeekOrigin.Begin);
-                    using (var gzipStream = new GZipStream(sourceStream, CompressionMode.Decompress, true))
-                    {
-                        int bufferNumber = 0;
-                        byte[] buffer = new byte[BlockSize];
-                        int bytesread = gzipStream.Read(buffer, 0, buffer.Length);
-                        if (bytesread < BlockSize)
-                            Array.Resize(ref buffer, bytesread);
-
-                        while (bytesread > 0)
-                        {
-                            if (isBreak)
-                                break;
-
-                            byte[] nextBuffer = new byte[BlockSize];
-                            bytesread = gzipStream.Read(nextBuffer, 0, nextBuffer.Length);
-                            if (bytesread < BlockSize)
-                                Array.Resize(ref nextBuffer, bytesread);
-
-                            BufferMyQueue.Enqueue(blockIndex, bufferNumber, buffer, nextBuffer.Length == 0);
-                            buffer = nextBuffer;
-                            bufferNumber++;
-                        }
-                    }
-                }
-
-
-            }
-            catch (Exception ex)
-            {
-                Exceptions.Add(ex);
-            }
-
-        }
-
-        private void SearchStartPositionBlock()
-        {
-            try
-            {
-                using (Stream localSourceStream = new FileStream(_soutceFilePath,
-                    FileMode.Open, FileAccess.Read, FileShare.Read,
-                    BlockSizeRead, FileOptions.Asynchronous))
-                {
-                    if (localSourceStream.StartsWith(gzipHeader))
-                    {
-                        while (localSourceStream.Position < localSourceStream.Length)
-                        {
-                            if (isBreak)
-                                break;
-
-                            var nextBlockIndex = localSourceStream.GetFirstBufferIndex(gzipHeader, BlockSizeRead);
-                            if (nextBlockIndex == -1)
-                                break;
-                            Enqueue(nextBlockIndex);
-                        }
-                    }
-                    else
-                    {
-                        Enqueue(0);
-                    }
-                }
-                Enqueue(-1);
-            }
-            catch (Exception ex)
-            {
-                Exceptions.Add(ex);
-            }
-            finally
-            {
-                _threadPool.UpCountTreaads();
             }
         }
-
-        private void Enqueue(long position)
-        {
-            lock (_queuePositionBlock)
-            {
-                _queuePositionBlock.Enqueue(position);
-                _readSemaphore.Release();
-            }
-        }
-
     }
 }
