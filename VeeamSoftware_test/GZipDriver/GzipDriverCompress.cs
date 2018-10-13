@@ -27,6 +27,7 @@ namespace VeeamSoftware_test.GZipDriver
                 }
                 var data = memoryStream.ToArray();
                 BitConverter.GetBytes(data.Length).CopyTo(data, 4);//TODO ?
+                return data;
             }
         }
     }
