@@ -14,9 +14,7 @@ namespace VeeamSoftware_test.GZipDriver
 {
     public abstract class GzipDriver : IGzipDriver
     {
-        private bool IsComplited;
-
-        protected const int BlockSize = 10 * 1024 * 1024;
+        private bool _isComplited;
 
         private readonly Thread _sourceThread;
         private readonly Thread _outputThread;
@@ -32,9 +30,8 @@ namespace VeeamSoftware_test.GZipDriver
 
         private static readonly AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
 
-        protected GzipDriver(string error)
+        protected GzipDriver()
         {
-            Error = error;
             _sourceThread = new Thread(ReadStream);
             _outputThread = new Thread(WriteStream);
 
@@ -60,7 +57,7 @@ namespace VeeamSoftware_test.GZipDriver
         public List<Exception> Exceptions { get; set; } = new List<Exception>();
 
         protected abstract int GetBlockLength(Stream stream);
-        protected abstract int ProcessBlcok(byte[] input);
+        protected abstract byte[] ProcessBlcok(byte[] input);
 
         private int MaxCountReadedBlocks { get; set; }
 
@@ -71,7 +68,7 @@ namespace VeeamSoftware_test.GZipDriver
                 var id = 0;
                 using (var inputStream = File.OpenRead(_soutceFilePath))
                 {
-                    while (!IsComplited && inputStream.Position < inputStream.Length)
+                    while (!_isComplited && inputStream.Position < inputStream.Length)
                     {
                         var blockSize = GetBlockLength(inputStream);
                         var data = new byte[blockSize];
@@ -83,7 +80,7 @@ namespace VeeamSoftware_test.GZipDriver
             }
             catch (Exception e)
             {
-                IsComplited = true;
+                _isComplited = true;
                 Exceptions.Add(e);
             }
         }
@@ -92,7 +89,7 @@ namespace VeeamSoftware_test.GZipDriver
         {
             try
             {
-                while (!IsComplited)
+                while (!_isComplited)
                 {
                     if (true) //TODO вставить попытку считывания с очереди чтения
                     {
@@ -105,7 +102,7 @@ namespace VeeamSoftware_test.GZipDriver
             }
             catch (Exception e)
             {
-                IsComplited = true;
+                _isComplited = true;
                 Exceptions.Add(e);
             }
         }
@@ -117,7 +114,7 @@ namespace VeeamSoftware_test.GZipDriver
                 var expectedId = 0;
                 using (var outputStrem = new FileStream(_outputFilePath, FileMode.Append))
                 {
-                    while (!IsComplited && expectedId < MaxCountReadedBlocks)
+                    while (!_isComplited && expectedId < MaxCountReadedBlocks)
                     {
                         if (true)//TODO вставить попытка взять объект из очереди записи
                         {
@@ -135,7 +132,7 @@ namespace VeeamSoftware_test.GZipDriver
             }
             finally
             {
-                IsComplited = true;
+                _isComplited = true;
             }
         }
     }
