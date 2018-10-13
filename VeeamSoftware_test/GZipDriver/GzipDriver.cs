@@ -1,6 +1,7 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -13,7 +14,9 @@ namespace VeeamSoftware_test.GZipDriver
 {
     public abstract class GzipDriver : IGzipDriver
     {
-        protected const int BlockSize = 10*1024*1024;
+        private bool IsComplited;
+
+        protected const int BlockSize = 10 * 1024 * 1024;
 
         private readonly Thread _sourceThread;
         private readonly Thread _outputThread;
@@ -21,7 +24,6 @@ namespace VeeamSoftware_test.GZipDriver
         protected int countTreadsOfObject;
         protected IMyThreadPool _threadPool;
         protected MyQueue<byte[]> BufferMyQueue = new MyQueue<byte[]>();
-        private List<Exception> _exceptions = new List<Exception>();
 
         protected string _soutceFilePath;
         private string _outputFilePath;
@@ -30,8 +32,9 @@ namespace VeeamSoftware_test.GZipDriver
 
         private static readonly AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
 
-        protected GzipDriver()
+        protected GzipDriver(string error)
         {
+            Error = error;
             _sourceThread = new Thread(ReadStream);
             _outputThread = new Thread(WriteStream);
 
@@ -54,13 +57,12 @@ namespace VeeamSoftware_test.GZipDriver
             _outputThread.Join();
         }
 
-        public List<Exception> Exceptions
-        {
-            get { return _exceptions; }
-            protected set { _exceptions = value; }
-        }
+        public List<Exception> Exceptions { get; set; } = new List<Exception>();
 
         protected abstract int GetBlockLength(Stream stream);
+        protected abstract int ProcessBlcok(byte[] input);
+
+        private int MaxCountReadedBlocks { get; set; }
 
         private void Read()
         {
@@ -69,7 +71,7 @@ namespace VeeamSoftware_test.GZipDriver
                 var id = 0;
                 using (var inputStream = File.OpenRead(_soutceFilePath))
                 {
-                    while (inputStream.Position < inputStream.Length)
+                    while (!IsComplited && inputStream.Position < inputStream.Length)
                     {
                         var blockSize = GetBlockLength(inputStream);
                         var data = new byte[blockSize];
@@ -77,62 +79,64 @@ namespace VeeamSoftware_test.GZipDriver
                         //TODO создать очередь для чтения
                     }
                 }
+                MaxCountReadedBlocks = id;
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
-                throw;
+                IsComplited = true;
+                Exceptions.Add(e);
             }
         }
 
-        /*protected abstract void ReadStream();
-
-        /// <summary>
-        /// Зпись  данных в выходной файл
-        /// </summary>
-        private void WriteStream()
+        private void Process()
         {
             try
             {
-                using (
-                    FileStream outputStream = new FileStream(_outputFilePath, FileMode.Create, FileAccess.Write,
-                        FileShare.Read, BlockSize, FileOptions.Asynchronous))
+                while (!IsComplited)
                 {
-                    while (_sourceThread.IsAlive || BufferMyQueue.Size > 0 || _threadPool.isWork)
+                    if (true) //TODO вставить попытку считывания с очереди чтения
                     {
-                        if (isBreak)
-                            break;
+                        //gлучили блок
+                        var block = new byte[6];
+                        var data = ProcessBlcok(block);
+                        //TODО добавление в очерезь записи
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                IsComplited = true;
+                Exceptions.Add(e);
+            }
+        }
 
-                        byte[] buffer;
-                        if (BufferMyQueue.TryGetValue(out buffer))
+        private void Write()
+        {
+            try
+            {
+                var expectedId = 0;
+                using (var outputStrem = new FileStream(_outputFilePath, FileMode.Append))
+                {
+                    while (!IsComplited && expectedId < MaxCountReadedBlocks)
+                    {
+                        if (true)//TODO вставить попытка взять объект из очереди записи
                         {
-                            outputStream.Write(buffer, 0, buffer.Length);
-                            outputStream.Flush();
-                            BufferMyQueue.Release();
+                            var blcok = new byte[4];
+                            expectedId++;
+                            outputStrem.Write(blcok, 0, 5);
+                            outputStrem.Flush(true);
                         }
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-
-                _exceptions.Add(ex);
+                Exceptions.Add(e);
             }
             finally
             {
-                _threadPool.Free();
-                sourceStream.Close();
-                _autoResetEvent.Set();
+                IsComplited = true;
             }
         }
-        
-        protected bool isBreak
-        {
-            get { return Exceptions.Count != 0; }
-        }*/
     }
-
-    
-
-    
 }
