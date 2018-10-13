@@ -6,6 +6,8 @@ namespace VeeamSoftware_test.ThreadPool
      {
          void Add(Action action);
 
+         int Count { get; }
+
          void Run();
 
          void Wait();

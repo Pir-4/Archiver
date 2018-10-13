@@ -8,7 +8,15 @@ namespace VeeamSoftware_test.ThreadPool
 {
     public class MyThreadPool : IMyThreadPool
     {
-        private readonly List<ThreadTask> _tasks;
+        private readonly List<ThreadTask> _tasks = new List<ThreadTask>();
+
+        public int Count
+        {
+            get
+            {
+                return _tasks.Count;
+            }
+        }
 
         public void Add(Action action) => _tasks.Add(new ThreadTask(action));
 
