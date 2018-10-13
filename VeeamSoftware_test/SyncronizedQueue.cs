@@ -11,7 +11,7 @@ namespace VeeamSoftware_test
     /// Для каждого эллемента указывается порядковый номер, сотоящий из основного порядка и подпорядка (если блок разбит на части)
     /// </summary>
     /// <typeparam name="T">Тип элементов в очереди</typeparam>
-    public class MyQueue<T>
+    public class SyncronizedQueue<T>
     {
         private Dictionary<QueuOrder, T> _queueDictionary = new Dictionary<QueuOrder, T>();
         private Dictionary<int, int> _subOrderLimits = new Dictionary<int, int>();
@@ -22,7 +22,7 @@ namespace VeeamSoftware_test
 
         AutoResetEvent _addEvent = new AutoResetEvent(false);
 
-        public MyQueue(int maxSize = 15)
+        public SyncronizedQueue(int maxSize = 15)
         {
             _semaphoreEnqueue = new Semaphore(maxSize, maxSize);
         }
