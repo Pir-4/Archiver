@@ -1,13 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.IO;
-using System.IO.Compression;
-using System.Threading;
-using VeeamSoftware_test.GZipDriver;
+using VeeamSoftware;
+using VeeamSoftware.GZipDriver;
 
-namespace VeeamSoftware_test.Gzip
+namespace VeeamSoftware_test
 {
     public abstract class GZipManager : IGZipManager
     {

@@ -56,7 +56,6 @@
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SyncronizedQueue.cs" />
-    <Compile Include="Task.cs" />
     <Compile Include="ThreadPool\ThreadTask.cs" />
   </ItemGroup>
   <ItemGroup>

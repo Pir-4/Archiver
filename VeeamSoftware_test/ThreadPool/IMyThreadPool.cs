@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VeeamSoftware_test.ThreadPool
+namespace VeeamSoftware.ThreadPool
 {
     public interface IMyThreadPool
      {

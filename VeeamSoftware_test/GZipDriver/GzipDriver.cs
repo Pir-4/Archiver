@@ -8,10 +8,9 @@ using System.Text;
 using System.IO.Compression;
 using System.Runtime.Remoting.Messaging;
 using System.Threading;
-using VeeamSoftware_test.Gzip;
-using VeeamSoftware_test.ThreadPool;
+using VeeamSoftware.ThreadPool;
 
-namespace VeeamSoftware_test.GZipDriver
+namespace VeeamSoftware.GZipDriver
 {
     public abstract class GzipDriver : IGzipDriver
     {

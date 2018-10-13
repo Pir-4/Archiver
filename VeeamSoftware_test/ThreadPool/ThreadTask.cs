@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace VeeamSoftware_test.ThreadPool
+namespace VeeamSoftware.ThreadPool
 {
     internal class ThreadTask
     {

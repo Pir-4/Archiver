@@ -5,9 +5,8 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 using System.Threading;
-using VeeamSoftware_test.Gzip;
 
-namespace VeeamSoftware_test.GZipDriver
+namespace VeeamSoftware.GZipDriver
 {
     public class GzipDriverDecompress : GzipDriver
     {

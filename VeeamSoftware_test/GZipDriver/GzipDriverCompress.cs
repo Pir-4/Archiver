@@ -4,9 +4,8 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Text;
-using VeeamSoftware_test.Gzip;
 
-namespace VeeamSoftware_test.GZipDriver
+namespace VeeamSoftware.GZipDriver
 {
     public class GzipDriverCompress : GzipDriver
     {

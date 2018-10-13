@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace VeeamSoftware_test
+namespace VeeamSoftware
 {
     internal class SyncronizedQueue<T> where T: class 
     {
