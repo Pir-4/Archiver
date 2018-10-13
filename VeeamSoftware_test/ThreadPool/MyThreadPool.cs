@@ -8,15 +8,23 @@ namespace VeeamSoftware_test.ThreadPool
 {
     public class MyThreadPool : IMyThreadPool
     {
-        private readonly List<ThreadStart> _actions;
+        private readonly List<ThreadTask> _tasks;
 
-        public void Add(Action action) => _actions.Add(new ThreadStart(action));
+        public void Add(Action action) => _tasks.Add(new ThreadTask(action));
 
-        public void Run()
+        public void Run() => Foreach(task => task.Run());       
+
+        public void Wait() => Foreach(task => task.Wait());
+
+        public void Cancel() => Foreach(task => task.Cancel());
+
+        public void Clear() => _tasks.Clear();
+
+        private void Foreach(Action<ThreadTask> action)
         {
-            foreach (var threadStart in _actions)
+            foreach (var task in _tasks)
             {
-                
+                action(task);
             }
         }
     }

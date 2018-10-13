@@ -58,6 +58,7 @@
     <Compile Include="SyncronizedQueue.cs" />
     <Compile Include="StreamExtensions.cs" />
     <Compile Include="Task.cs" />
+    <Compile Include="ThreadPool\ThreadTask.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

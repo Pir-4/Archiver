@@ -1,6 +1,26 @@
-﻿namespace VeeamSoftware_test.ThreadPool
+﻿using System;
+
+namespace VeeamSoftware_test.ThreadPool
 {
     public interface IMyThreadPool
+     {
+         void Add(Action action);
+
+         void Run();
+
+         void Wait();
+
+         void Cancel();
+
+         void Clear();
+     }
+
+    public static class ThreadPoolExtension
     {
+        public static void Execute(this IMyThreadPool pool)
+        {
+            pool.Run();
+            pool.Wait();
+        }
     }
 }
