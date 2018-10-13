@@ -20,16 +20,21 @@ namespace VeeamSoftware_test.GZipDriver
         protected string SourceFilePath;
         protected string OutputFilePath;
 
+        private readonly SyncronizedQueue<byte[]> _readQueue;
+        private readonly SyncronizedQueue<byte[]> _writeQueue;
 
         protected GzipDriver()
         {
-
+            _readQueue = new SyncronizedQueue<byte[]>();
+            _writeQueue = new SyncronizedQueue<byte[]>();
         }
 
         public void Execute(string inputPath, string outputPath)
         {
             SourceFilePath = inputPath;
             OutputFilePath = outputPath;
+
+            //Todo сделать многопоточность
         }
 
         public List<Exception> Exceptions { get; set; } = new List<Exception>();
@@ -50,7 +55,7 @@ namespace VeeamSoftware_test.GZipDriver
                         var blockSize = GetBlockLength(inputStream);
                         var data = new byte[blockSize];
                         inputStream.Read(data, 0, data.Length);
-                        //TODO создать очередь для чтения
+                        _readQueue.Enqueue(data, id);
                     }
                 }
                 _maxCountReadedBlocks = id;
@@ -68,12 +73,12 @@ namespace VeeamSoftware_test.GZipDriver
             {
                 while (!_isComplited)
                 {
-                    if (true) //TODO вставить попытку считывания с очереди чтения
+                    byte[] block;
+                    long? id;
+                    if (_readQueue.TryGetValue(out block, out id))
                     {
-                        //gлучили блок
-                        var block = new byte[6];
                         var data = ProcessBlcok(block);
-                        //TODО добавление в очерезь записи
+                        _writeQueue.Enqueue(data, id.Value);
                     }
                 }
             }
@@ -93,7 +98,9 @@ namespace VeeamSoftware_test.GZipDriver
                 {
                     while (!_isComplited && expectedId < _maxCountReadedBlocks)
                     {
-                        if (true)//TODO вставить попытка взять объект из очереди записи
+                        byte[] block;
+                        long? id;
+                        if (_writeQueue.TryGetValue(out block, out id))
                         {
                             var blcok = new byte[4];
                             expectedId++;
