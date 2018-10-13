@@ -60,7 +60,32 @@ namespace VeeamSoftware_test.GZipDriver
             protected set { _exceptions = value; }
         }
 
-        protected abstract void ReadStream();
+        protected abstract int GetBlockLength(Stream stream);
+
+        private void Read()
+        {
+            try
+            {
+                var id = 0;
+                using (var inputStream = File.OpenRead(_soutceFilePath))
+                {
+                    while (inputStream.Position < inputStream.Length)
+                    {
+                        var blockSize = GetBlockLength(inputStream);
+                        var data = new byte[blockSize];
+                        inputStream.Read(data, 0, data.Length);
+                        //TODO создать очередь для чтения
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+                throw;
+            }
+        }
+
+        /*protected abstract void ReadStream();
 
         /// <summary>
         /// Зпись  данных в выходной файл
@@ -100,11 +125,11 @@ namespace VeeamSoftware_test.GZipDriver
                 _autoResetEvent.Set();
             }
         }
-
+        
         protected bool isBreak
         {
             get { return Exceptions.Count != 0; }
-        }
+        }*/
     }
 
     
