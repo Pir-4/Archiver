@@ -1,14 +1,14 @@
 ﻿using System.IO;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using VeeamSoftware;
+using NUnit.Framework;
+using ve
 
 namespace UnitTest
 {
-    [TestClass]
+    [TestFixture]
     public class GZipManagerTest
     {
 
-        [TestMethod]
+        [Test]
         public void CompressFileAndDecompressToFile()
         {
             string inputFile = @"E:\education\programs\test\testttt\dfdf.txt";
@@ -31,7 +31,8 @@ namespace UnitTest
             File.Delete(outputfile);
             File.Delete(gzip);
         }
-        [TestMethod]
+
+        [Test]
         public void CompressFileAndDecompressToFatFile()
         {
             string inputFile = @"E:\education\programs\programs.rar";
@@ -54,7 +55,8 @@ namespace UnitTest
             File.Delete(outputfile);
             File.Delete(gzip);
         }
-        [TestMethod]
+
+        [Test]
         public void CompressFileToFatFile()
         {
             string inputFile = @"E:\education\programs\TonarinoTotoro.mkv";
@@ -66,7 +68,8 @@ namespace UnitTest
 
             File.Delete(gzip);
         }
-        [TestMethod]
+
+        [Test]
         public void DecompressFileToFatFile()
         {
             string outputFile = @"E:\education\programs\TonarinoTotoro2.mkv";
