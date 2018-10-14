@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GZipTest.GZipDriver
+namespace GZipTest.Drivers
 {
     public abstract class DriverGZip : Driver
     {

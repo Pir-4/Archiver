@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GZipTest.GZipDriver
+namespace GZipTest.Drivers
 {
     public interface IDriver
     {

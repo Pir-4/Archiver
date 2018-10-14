@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using GZipTest;
-using GZipTest.GZipDriver;
+using GZipTest.Drivers;
 
 namespace GZipTest
 {
