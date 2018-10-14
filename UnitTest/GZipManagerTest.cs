@@ -9,7 +9,7 @@ namespace UnitTest
     [TestFixture]
     public class GZipManagerTest
     {
-        protected string _pathTotestFolder = @"E:\education\programs\Veeam\test";
+        protected const string _pathTotestFolder = @"E:\education\programs\Veeam\test";
 
         [TestCase("small.txt")]
         [TestCase("4GB.mkv")]
