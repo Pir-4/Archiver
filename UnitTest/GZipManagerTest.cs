@@ -45,7 +45,7 @@ namespace UnitTest
 
         private static void CompressFile(string inputFile, string gzip)
         {
-            IManager zip = new GZipManagerCompress(inputFile, gzip);
+            IManager zip = new ManagerGZipCompress(inputFile, gzip);
             zip.Execute();
             Assert.IsTrue(zip.Exceptions().Count == 0);
         }
@@ -53,7 +53,7 @@ namespace UnitTest
         private static void DecompressFile(string gzip, string outputfile)
         {
             IManager zip;
-            zip = new GZipManagerDecompress(gzip, outputfile);
+            zip = new ManagerGZipDecompress(gzip, outputfile);
             zip.Execute();
             Assert.IsTrue(zip.Exceptions().Count == 0);
         }
