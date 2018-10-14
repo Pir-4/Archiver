@@ -7,11 +7,11 @@ using System.Text;
 
 namespace GZipTest.GZipDriver
 {
-    public class GzipDriverCompress : Driver
+    public class DriverGzipCompress : Driver
     {
         protected const int BlockSize = 10 * 1024 * 1024;
 
-        public GzipDriverCompress(string inputPath, string outputPath) : base(inputPath, outputPath)
+        public DriverGzipCompress(string inputPath, string outputPath) : base(inputPath, outputPath)
         {
         }
 

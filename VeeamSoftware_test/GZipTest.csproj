@@ -50,8 +50,8 @@
     <Compile Include="ThreadPool\IMyThreadPool.cs" />
     <Compile Include="ThreadPool\MyThreadPool.cs" />
     <Compile Include="GZipDriver\Driver.cs" />
-    <Compile Include="GZipDriver\GzipDriverCompress.cs" />
-    <Compile Include="GZipDriver\GzipDriverDecompress.cs" />
+    <Compile Include="GZipDriver\DriverGzipCompress.cs" />
+    <Compile Include="GZipDriver\DriverGzipDecompress.cs" />
     <Compile Include="GZipDriver\IDriver.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="Program.cs" />

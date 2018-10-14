@@ -44,7 +44,7 @@ namespace GZipTest
     {
         public ManagerGZipCompress(string inputFile, string outputfile) : base(inputFile, outputfile)
         {
-            Driver = new GzipDriverCompress(inputFile, outputfile);
+            Driver = new DriverGzipCompress(inputFile, outputfile);
         }
         public override string Act => Command.Compress.ToString();
     }
@@ -53,7 +53,7 @@ namespace GZipTest
     {
         public ManagerGZipDecompress(string inputFile, string outputfile) : base(inputFile, outputfile)
         {
-            Driver = new GzipDriverDecompress(inputFile, outputfile);
+            Driver = new DriverGzipDecompress(inputFile, outputfile);
         }
         public override string Act => Command.Decompress.ToString();
     }
