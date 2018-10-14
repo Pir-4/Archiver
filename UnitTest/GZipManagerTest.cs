@@ -1,4 +1,6 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Security.Cryptography;
 using NUnit.Framework;
 using GZipTest;
 
@@ -7,79 +9,66 @@ namespace UnitTest
     [TestFixture]
     public class GZipManagerTest
     {
+        private string _pathTotestFolder = @"E:\education\programs\Veeam\test";
 
-        [Test]
-        public void CompressFileAndDecompressToFile()
+        [TestCase("small.txt")]
+        [TestCase("4GB.mkv")]
+        [TestCase("9GB.rar")]
+        [TestCase("empty.txt")]
+        public void CompressFileAndDecompressToFile(string fileName)
         {
-            string inputFile = @"E:\education\programs\Veeam\test\testttt\dfdf.txt";
+            string inputFile = Path.Combine(_pathTotestFolder, fileName);
 
-            string outputfile = @"E:\education\programs\Veeam\test22.txt";
-            string gzip = @"E:\education\programs\Veeam\test.gzip";
+            string outputfile = inputFile+"_output";
+            string gzip = inputFile + "_gz";
 
-            IGZipManager zip = new GZipManagerCompress(inputFile, gzip);
-            zip.Execute();
-            Assert.IsTrue(zip.Exceptions().Count == 0);
+            IfExistDeleteFile(outputfile);
+            IfExistDeleteFile(gzip);
 
-            zip = new GZipManagerDecompress(gzip, outputfile);
-            zip.Execute();
-            Assert.IsTrue(zip.Exceptions().Count == 0);
+            CompressFile(inputFile, gzip);
+            DecompressFile(gzip, outputfile);
 
-            FileInfo Etalon = new FileInfo(inputFile);
-            FileInfo create = new FileInfo(outputfile);
-            Assert.IsTrue(Etalon.Length == create.Length);
+            FileInfo input = new FileInfo(inputFile);
+            FileInfo output = new FileInfo(outputfile);
+
+            Assert.IsTrue(input.Length.Equals(output.Length));
+            Assert.IsTrue(GetMd5OfFile(inputFile).Equals(GetMd5OfFile(outputfile)));
 
             File.Delete(outputfile);
             File.Delete(gzip);
         }
 
-        [Test]
-        public void CompressFileAndDecompressToFatFile()
+        private static void CompressFile(string inputFile, string gzip)
         {
-            string inputFile = @"E:\education\programs\programs.rar";
-
-            string outputfile = @"E:\education\programs\test22.txt";
-            string gzip = @"E:\education\programs\test.gzip";
-
             IGZipManager zip = new GZipManagerCompress(inputFile, gzip);
             zip.Execute();
             Assert.IsTrue(zip.Exceptions().Count == 0);
+        }
 
+        private static void DecompressFile(string gzip, string outputfile)
+        {
+            IGZipManager zip;
             zip = new GZipManagerDecompress(gzip, outputfile);
             zip.Execute();
             Assert.IsTrue(zip.Exceptions().Count == 0);
-
-            FileInfo Etalon = new FileInfo(inputFile);
-            FileInfo create = new FileInfo(outputfile);
-            Assert.IsTrue(Etalon.Length == create.Length);
-
-            File.Delete(outputfile);
-            File.Delete(gzip);
         }
 
-        [Test]
-        public void CompressFileToFatFile()
+        private static void IfExistDeleteFile(string filePath)
         {
-            string inputFile = @"E:\education\programs\TonarinoTotoro.mkv";
-            string gzip = @"E:\education\programs\test.gzip";
-
-            IGZipManager zip = new GZipManagerCompress(inputFile, gzip);
-            zip.Execute();
-            Assert.IsTrue(zip.Exceptions().Count == 0);
-
-            File.Delete(gzip);
+            if (File.Exists(filePath))
+            {
+                File.Delete(filePath);
+            }
         }
 
-        [Test]
-        public void DecompressFileToFatFile()
+        private static string GetMd5OfFile(string filePath)
         {
-            string outputFile = @"E:\education\programs\TonarinoTotoro2.mkv";
-            string gzip = @"E:\education\programs\test2.gzip";
-
-            IGZipManager zip = new GZipManagerDecompress(gzip, outputFile);
-            zip.Execute();
-            Assert.IsTrue(zip.Exceptions().Count == 0);
-
-            File.Delete(outputFile);
+            using (var md5 = MD5.Create())
+            using (var stream = File.OpenRead(filePath))
+            {
+                var hash = md5.ComputeHash(stream);
+                return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
+            }
         }
     }
 }
