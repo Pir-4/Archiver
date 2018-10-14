@@ -29,6 +29,7 @@ namespace UnitTest
         {
             Assert.IsTrue(Program.Main(new string[] { "To_compress", "", "" }).Equals(1));
             Assert.IsTrue(Program.Main(new string[] { "To_decompress", "", "" }).Equals(1));
+            Assert.IsTrue(Program.Main(new string[] { "To_sha256", "", "" }).Equals(1));
         }
         [TestMethod]
         public void NotCorretSourceFileNameArgv()
@@ -39,6 +40,7 @@ namespace UnitTest
         public void NotCorretOutputFileNameArgv()
         {
             Assert.IsTrue(Program.Main(new string[] { Command.Compress.ToString(), Path.Combine(_pathTotestFolder, "small.txt"), @"U:\Tgt" }).Equals(1));
+            Assert.IsTrue(Program.Main(new string[] { Command.Sha256.ToString(), Path.Combine(_pathTotestFolder, "small.txt"), @"U:\Tgt" }).Equals(1));
         }
         [TestMethod]
         public void CorreteArgv()

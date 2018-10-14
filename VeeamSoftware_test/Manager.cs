@@ -9,7 +9,7 @@ namespace GZipTest
     {
         protected IDriver Driver;
 
-        public static IManager Factory(string act, string inputFile, string outputfile, int? blockSize = null)
+        public static IManager Factory(string act, string inputFile, string outputfile, int blockSize = 0)
         {
             if (act.Equals(Command.Compress.ToString(), StringComparison.CurrentCultureIgnoreCase))
                 return new ManagerGZipCompress(inputFile, outputfile);
@@ -18,10 +18,8 @@ namespace GZipTest
                 return new ManagerGZipDecompress(inputFile, outputfile);
 
             if (act.Equals(Command.Sha256.ToString(), StringComparison.CurrentCultureIgnoreCase))
-            {
-                if(!blockSize.HasValue) throw new ArgumentNullException("For calculate 'Sha256' block size have value");//TODO испривать формулировку
-                return new ManagerSha256(inputFile, blockSize.Value);
-            }
+                return new ManagerSha256(inputFile, blockSize);
+            
 
             return null;
         }
