@@ -17,7 +17,7 @@ namespace GZipTest.Drivers
 
         public DriverSha256(string inputPath, int blcokSize ) : base(inputPath, "")
         {
-            BlockSize = blcokSize;
+            BlockSize = blcokSize == 0 ? 10*1024*1024 : blcokSize;
         }
 
         protected override int GetBlockLength(Stream stream)
