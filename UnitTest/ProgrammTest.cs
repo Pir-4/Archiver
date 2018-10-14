@@ -6,8 +6,9 @@ using GZipTest;
 namespace UnitTest
 {
     [TestClass]
-    public class ProgrammTest
+    public class ProgrammTest : GZipManagerTest
     {
+
         [TestMethod]
         public void NullArgv()
         {
@@ -16,12 +17,12 @@ namespace UnitTest
         [TestMethod]
         public void EmptyArgv()
         {
-            Assert.IsTrue(Program.Main(new string[] {}).Equals(1));
+            Assert.IsTrue(Program.Main(new string[] { }).Equals(1));
         }
         [TestMethod]
         public void LotOfArgv()
         {
-            Assert.IsTrue(Program.Main(new string[] {"","","","" }).Equals(1));
+            Assert.IsTrue(Program.Main(new string[] { "", "", "", "" }).Equals(1));
         }
         [TestMethod]
         public void BadParametersArgv()
@@ -37,25 +38,23 @@ namespace UnitTest
         [TestMethod]
         public void NotCorretOutputFileNameArgv()
         {
-            Assert.IsTrue(Program.Main(new string[] { "compress", @"E:\education\programs\test\test.txt", @"U:\Tgt" }).Equals(1));
+            Assert.IsTrue(Program.Main(new string[] { "compress", Path.Combine(_pathTotestFolder, "small.txt"), @"U:\Tgt" }).Equals(1));
         }
         [TestMethod]
         public void CorreteArgv()
         {
-            string compressFile = @"E:\education\programs\test\test.txt";
-            string zipFile = @"E:\education\programs\test\test.gzip";
-            string controllFile = @"E:\education\programs\test\testControll.txt";
+            string inputFile = Path.Combine(_pathTotestFolder, "small.txt");
+            string zipFile = inputFile + "_gz";
+            string decompressFile = inputFile +"output";
 
-            Assert.IsTrue(Program.Main(new string[] { "compress", compressFile, zipFile }).Equals(0));
+            IfExistDeleteFile(decompressFile);
+            IfExistDeleteFile(zipFile);
 
-            Assert.IsTrue(Program.Main(new string[] { "decompress", zipFile, controllFile }).Equals(0));
+            Assert.IsTrue(Program.Main(new string[] { "compress", inputFile, zipFile }).Equals(0));
 
-            FileInfo Etalon = new FileInfo(compressFile);
-            FileInfo create = new FileInfo(controllFile);
-            Assert.IsTrue(Etalon.Length == create.Length);
+            Assert.IsTrue(Program.Main(new string[] { "decompress", zipFile, decompressFile }).Equals(0));
 
-            File.Delete(zipFile);
-            File.Delete(controllFile);
+            CheckResult(inputFile, decompressFile, zipFile)
         }
     }
 }

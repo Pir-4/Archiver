@@ -9,7 +9,7 @@ namespace UnitTest
     [TestFixture]
     public class GZipManagerTest
     {
-        private string _pathTotestFolder = @"E:\education\programs\Veeam\test";
+        protected string _pathTotestFolder = @"E:\education\programs\Veeam\test";
 
         [TestCase("small.txt")]
         [TestCase("4GB.mkv")]
@@ -28,6 +28,11 @@ namespace UnitTest
             CompressFile(inputFile, gzip);
             DecompressFile(gzip, outputfile);
 
+            CheckResult(inputFile, outputfile, gzip);
+        }
+
+        protected static void CheckResult(string inputFile, string outputfile, string gzip)
+        {
             FileInfo input = new FileInfo(inputFile);
             FileInfo output = new FileInfo(outputfile);
 
@@ -53,7 +58,7 @@ namespace UnitTest
             Assert.IsTrue(zip.Exceptions().Count == 0);
         }
 
-        private static void IfExistDeleteFile(string filePath)
+        protected static void IfExistDeleteFile(string filePath)
         {
             if (File.Exists(filePath))
             {
@@ -61,7 +66,7 @@ namespace UnitTest
             }
         }
 
-        private static string GetMd5OfFile(string filePath)
+        protected static string GetMd5OfFile(string filePath)
         {
             using (var md5 = MD5.Create())
             using (var stream = File.OpenRead(filePath))
