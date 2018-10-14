@@ -7,7 +7,7 @@ namespace GZipTest
 {
     public abstract class Manager : IManager
     {
-        protected IGzipDriver Driver;
+        protected IDriver Driver;
 
         public static IManager Сreate(string act, string inputFile, string outputfile)
         {

@@ -12,7 +12,7 @@ using GZipTest.ThreadPool;
 
 namespace GZipTest.GZipDriver
 {
-    public abstract class GzipDriver : IGzipDriver
+    public abstract class Driver : IDriver
     {
         private bool _isComplited;
         private int _maxCountReadedBlocks = int.MaxValue;
@@ -25,7 +25,7 @@ namespace GZipTest.GZipDriver
 
         private readonly IMyThreadPool _threadPool;
 
-        protected GzipDriver(string inputPath, string outputPath)
+        protected Driver(string inputPath, string outputPath)
         {
             SourceFilePath = inputPath;
             OutputFilePath = outputPath;

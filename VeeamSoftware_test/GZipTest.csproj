@@ -49,10 +49,10 @@
     <Compile Include="IManager.cs" />
     <Compile Include="ThreadPool\IMyThreadPool.cs" />
     <Compile Include="ThreadPool\MyThreadPool.cs" />
-    <Compile Include="GZipDriver\GzipDriver.cs" />
+    <Compile Include="GZipDriver\Driver.cs" />
     <Compile Include="GZipDriver\GzipDriverCompress.cs" />
     <Compile Include="GZipDriver\GzipDriverDecompress.cs" />
-    <Compile Include="GZipDriver\IGzipDriver.cs" />
+    <Compile Include="GZipDriver\IDriver.cs" />
     <Compile Include="Manager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 
 namespace GZipTest.GZipDriver
 {
-    public interface IGzipDriver
+    public interface IDriver
     {
         /// <summary>
         /// Преобразование данных

@@ -8,7 +8,7 @@ using System.Threading;
 
 namespace GZipTest.GZipDriver
 {
-    public class GzipDriverDecompress : GzipDriver
+    public class GzipDriverDecompress : Driver
     {
         public GzipDriverDecompress(string inputPath, string outputPath) : base(inputPath, outputPath)
         {
