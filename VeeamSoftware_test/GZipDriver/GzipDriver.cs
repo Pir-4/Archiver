@@ -15,7 +15,7 @@ namespace GZipTest.GZipDriver
     public abstract class GzipDriver : IGzipDriver
     {
         private bool _isComplited;
-        private int _maxCountReadedBlocks;
+        private int _maxCountReadedBlocks = int.MaxValue;
 
         protected string SourceFilePath;
         protected string OutputFilePath;
@@ -65,7 +65,7 @@ namespace GZipTest.GZipDriver
                         var blockSize = GetBlockLength(inputStream);
                         var data = new byte[blockSize];
                         inputStream.Read(data, 0, data.Length);
-                        _readQueue.Enqueue(data, id);
+                        _readQueue.Enqueue(data, id++);
                     }
                 }
                 _maxCountReadedBlocks = id;
@@ -84,11 +84,11 @@ namespace GZipTest.GZipDriver
                 while (!_isComplited)
                 {
                     byte[] block;
-                    long? id;
+                    long id;
                     if (_readQueue.TryGetValue(out block, out id))
                     {
                         var data = ProcessBlcok(block);
-                        _writeQueue.Enqueue(data, id.Value);
+                        _writeQueue.Enqueue(data, id);
                     }
                 }
             }
@@ -109,7 +109,7 @@ namespace GZipTest.GZipDriver
                     while (!_isComplited && expectedId < _maxCountReadedBlocks)
                     {
                         byte[] block;
-                        long? id;
+                        long id;
                         if (_writeQueue.TryGetValue(out block, out id))
                         {
                             expectedId++;
