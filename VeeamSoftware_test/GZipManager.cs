@@ -9,9 +9,6 @@ namespace GZipTest
     {
         protected IGzipDriver Driver;
 
-        private string _sourceFile;
-        private string _resultFile;
-
         public static IGZipManager Сreate(string act, string inputFile, string outputfile)
         {
             if (act.Equals(Command.Compress.ToString(), StringComparison.CurrentCultureIgnoreCase))
@@ -38,17 +35,9 @@ namespace GZipTest
         }
         public abstract string Act { get; }
 
-        public string SourceFile
-        {
-            get { return _sourceFile; }
-            private set { _sourceFile = value; }
-        }
+        public string SourceFile { get; private set; }
 
-        public string ResultFile
-        {
-            get { return _resultFile; }
-            private set { _resultFile = value; }
-        }
+        public string ResultFile { get; private set; }
     }
 
     public class GZipManagerCompress : GZipManager
