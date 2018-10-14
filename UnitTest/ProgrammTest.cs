@@ -54,7 +54,7 @@ namespace UnitTest
 
             Assert.IsTrue(Program.Main(new string[] { "decompress", zipFile, decompressFile }).Equals(0));
 
-            CheckResult(inputFile, decompressFile, zipFile)
+            CheckResult(inputFile, decompressFile, zipFile);
         }
     }
 }
