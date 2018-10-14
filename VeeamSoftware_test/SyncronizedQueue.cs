@@ -62,12 +62,6 @@ namespace GZipTest
             {
                 var result = Volatile.Read(ref _count) > 0;
 
-                /*while (!result)
-                {
-                    Monitor.Wait(this);
-                    result = Volatile.Read(ref _count) > 0;
-                }*/
-
                 data = _head?.Data;
                 id = _head?.Id ?? 0;
                 if (result)

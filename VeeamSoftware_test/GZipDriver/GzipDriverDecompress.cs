@@ -19,7 +19,7 @@ namespace GZipTest.GZipDriver
             var startPosition = stream.Position;
             var blockLengthBytes = new byte[8];
             stream.Read(blockLengthBytes, 0, blockLengthBytes.Length);
-            var blockLength = BitConverter.ToInt32(blockLengthBytes, 4);//TODO ?
+            var blockLength = BitConverter.ToInt32(blockLengthBytes, 4);
             stream.Position = startPosition;
             return blockLength;
         }
