@@ -14,14 +14,14 @@ namespace GZipTest.GZipDriver
 {
     public abstract class Driver : IDriver
     {
-        protected bool _isComplited;
-        protected int _maxCountReadedBlocks = int.MaxValue;
+        protected bool IsComplited;
+        protected int MaxCountReadedBlocks = int.MaxValue;
 
         protected string SourceFilePath;
         protected string OutputFilePath;
 
         private readonly SyncronizedQueue<byte[]> _readQueue;
-        protected readonly SyncronizedQueue<byte[]> _writeQueue;
+        protected readonly SyncronizedQueue<byte[]> WriteQueue;
 
         private readonly IMyThreadPool _threadPool;
 
@@ -31,7 +31,7 @@ namespace GZipTest.GZipDriver
             OutputFilePath = outputPath;
 
             _readQueue = new SyncronizedQueue<byte[]>();
-            _writeQueue = new SyncronizedQueue<byte[]>();
+            WriteQueue = new SyncronizedQueue<byte[]>();
 
             _threadPool = new MyThreadPool();
         }
@@ -63,7 +63,7 @@ namespace GZipTest.GZipDriver
                 var id = 0;
                 using (var inputStream = File.OpenRead(SourceFilePath))
                 {
-                    while (!_isComplited && inputStream.Position < inputStream.Length)
+                    while (!IsComplited && inputStream.Position < inputStream.Length)
                     {
                         var blockSize = GetBlockLength(inputStream);
                         var data = new byte[blockSize];
@@ -71,11 +71,11 @@ namespace GZipTest.GZipDriver
                         _readQueue.Enqueue(data, id++);
                     }
                 }
-                _maxCountReadedBlocks = id;
+                MaxCountReadedBlocks = id;
             }
             catch (Exception e)
             {
-                _isComplited = true;
+                IsComplited = true;
                 Exceptions.Add(e);
             }
         }
@@ -84,20 +84,20 @@ namespace GZipTest.GZipDriver
         {
             try
             {
-                while (!_isComplited)
+                while (!IsComplited)
                 {
                     byte[] block;
                     long id;
                     if (_readQueue.TryGetValue(out block, out id))
                     {
                         var data = ProcessBlcok(block);
-                        _writeQueue.Enqueue(data, id);
+                        WriteQueue.Enqueue(data, id);
                     }
                 }
             }
             catch (Exception e)
             {
-                _isComplited = true;
+                IsComplited = true;
                 Exceptions.Add(e);
             }
         }
@@ -114,7 +114,7 @@ namespace GZipTest.GZipDriver
             }
             finally
             {
-                _isComplited = true;
+                IsComplited = true;
             }
         }
     }
