@@ -1,14 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
+using GZiptest;
 using GZipTest.GZipDriver;
 
 namespace GZipTest
 {
     public abstract class GZipManager : IGZipManager
     {
-        public const string Compress = "compress";
-        public const string Decompress = "decompress";
-
         protected IGzipDriver Driver;
 
         private string _sourceFile;
@@ -16,10 +14,10 @@ namespace GZipTest
 
         public static IGZipManager Сreate(string act, string inputFile, string outputfile)
         {
-            if (act.ToLower().Equals(Compress))
+            if (act.Equals(Command.Compress.ToString(), StringComparison.CurrentCultureIgnoreCase))
                 return new GZipManagerCompress(inputFile, outputfile);
 
-            if (act.ToLower().Equals(Decompress))
+            if (act.Equals(Command.Decompress.ToString(), StringComparison.CurrentCultureIgnoreCase))
                 return new GZipManagerDecompress(inputFile, outputfile);
 
             return null;
@@ -59,7 +57,7 @@ namespace GZipTest
         {
             Driver = new GzipDriverCompress();
         }
-        public override string Act => Compress;
+        public override string Act => Command.Compress.ToString();
     }
 
     public class GZipManagerDecompress : GZipManager
@@ -68,7 +66,7 @@ namespace GZipTest
         {
             Driver = new GzipDriverDecompress();
         }
-        public override string Act => Decompress;
+        public override string Act => Command.Decompress.ToString();
     }
 
 }
