@@ -11,12 +11,13 @@ using System.Security.Cryptography;
 
 namespace GZipTest.Drivers
 {
-    public class DriverHash256 : Driver
+    public class DriverSha256 : Driver
     {
-        public int BlockSize { get; set; } = 10 * 1024 * 1024;
+        public int BlockSize { get; private set; }
 
-        public DriverHash256(string inputPath, string outputPath) : base(inputPath, outputPath)
+        public DriverSha256(string inputPath, int blcokSize ) : base(inputPath, "")
         {
+            BlockSize = blcokSize;
         }
 
         protected override int GetBlockLength(Stream stream)

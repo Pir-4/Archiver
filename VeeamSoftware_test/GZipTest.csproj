@@ -47,7 +47,7 @@
   <ItemGroup>
     <Compile Include="Commands.cs" />
     <Compile Include="Drivers\DriverGZip.cs" />
-    <Compile Include="Drivers\DriverHash256.cs" />
+    <Compile Include="Drivers\DriverSha256.cs" />
     <Compile Include="IManager.cs" />
     <Compile Include="ThreadPool\IMyThreadPool.cs" />
     <Compile Include="ThreadPool\MyThreadPool.cs" />
