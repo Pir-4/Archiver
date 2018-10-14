@@ -9,6 +9,7 @@ namespace GZipTest
     public enum Command
     {
         Compress,
-        Decompress
+        Decompress,
+        Sha256
     } 
 }
