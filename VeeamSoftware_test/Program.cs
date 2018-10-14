@@ -67,6 +67,7 @@ namespace GZipTest
                }
             return 0;
         }
+
         private static IGZipManager ValidateArguments(string[] argv)
         {
             if (argv == null || argv.Length != 3)
@@ -89,7 +90,6 @@ namespace GZipTest
             if (result == null)
                 throw new ArgumentException(
                     $"Please use \"{Command.Compress}\" and \"{Command.Decompress}\" commands only as the first parameter.");
-
 
             return result;
 
