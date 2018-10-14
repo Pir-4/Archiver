@@ -17,11 +17,11 @@ namespace GZipTest.GZipDriver
             var expectedId = 0;
             using (var outputStrem = new FileStream(OutputFilePath, FileMode.Append))
             {
-                while (!_isComplited && expectedId < _maxCountReadedBlocks)
+                while (!IsComplited && expectedId < MaxCountReadedBlocks)
                 {
                     byte[] block;
                     long id;
-                    if (_writeQueue.TryGetValue(out block, out id))
+                    if (WriteQueue.TryGetValue(out block, out id))
                     {
                         expectedId++;
                         outputStrem.Write(block, 0, block.Length);
