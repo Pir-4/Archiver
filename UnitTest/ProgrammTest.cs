@@ -37,19 +37,19 @@ namespace UnitTest
             Assert.IsTrue(Program.Main(new string[] { command, Path.Combine(_pathTotestFolder, "small.txt"), argv2}).Equals(1));
         }
 
-        [TestCase]
+        [Test]
         public void CorreteArgvToArchive()
         {
             string inputFile = Path.Combine(_pathTotestFolder, "small.txt");
             string zipFile = inputFile + "_gz";
-            string decompressFile = inputFile +"output";
+            string decompressFile = inputFile +"_output";
 
             IfExistDeleteFile(decompressFile);
             IfExistDeleteFile(zipFile);
 
             Assert.IsTrue(Program.Main(new string[] { Command.Compress.ToString(), inputFile, zipFile }).Equals(0));
 
-            Assert.IsTrue(Program.Main(new string[] { Command.Compress.ToString(), zipFile, decompressFile }).Equals(0));
+            Assert.IsTrue(Program.Main(new string[] { Command.Decompress.ToString(), zipFile, decompressFile }).Equals(0));
 
             CheckResult(inputFile, decompressFile, zipFile);
         }

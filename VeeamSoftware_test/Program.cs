@@ -6,6 +6,7 @@ using System.IO;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using GZipTest;
 
@@ -89,7 +90,7 @@ namespace GZipTest
             if (!File.Exists(argv[1]))
                 throw new ArgumentException("Please enter correct source file name.");
 
-            if (argv[2].IndexOfAny(Path.GetInvalidPathChars()) != -1)
+            if (!argv[0].Equals(Command.Sha256.ToString(),StringComparison.CurrentCultureIgnoreCase))
             {
                 if (!Directory.Exists(Path.GetDirectoryName(argv[2])))
                     throw new ArgumentException("Please enter correct directory output file.");
