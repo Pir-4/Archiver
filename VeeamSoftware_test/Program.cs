@@ -46,7 +46,7 @@ namespace GZipTest
                 consoleHandler = new HandlerRoutine(ConsoleCtrlCheck);
                 SetConsoleCtrlHandler(consoleHandler, true);
 
-                IGZipManager manager = ValidateArguments(argv);
+                IManager manager = ValidateArguments(argv);
 
                 Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion started. Input file: {1}", manager.Act, manager.SourceFile));
                 manager.Execute();
@@ -68,7 +68,7 @@ namespace GZipTest
             return 0;
         }
 
-        private static IGZipManager ValidateArguments(string[] argv)
+        private static IManager ValidateArguments(string[] argv)
         {
             if (argv == null || argv.Length != 3)
             {
@@ -85,7 +85,7 @@ namespace GZipTest
             if (!Directory.Exists(Path.GetDirectoryName(argv[2])))
                 throw new ArgumentException("Please enter correct directory output file.");
 
-            IGZipManager result = GZipManager.Сreate(argv[0], argv[1], argv[2]);
+            IManager result = Manager.Сreate(argv[0], argv[1], argv[2]);
 
             if (result == null)
                 throw new ArgumentException(

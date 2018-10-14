@@ -5,11 +5,11 @@ using GZipTest.GZipDriver;
 
 namespace GZipTest
 {
-    public abstract class GZipManager : IGZipManager
+    public abstract class Manager : IManager
     {
         protected IGzipDriver Driver;
 
-        public static IGZipManager Сreate(string act, string inputFile, string outputfile)
+        public static IManager Сreate(string act, string inputFile, string outputfile)
         {
             if (act.Equals(Command.Compress.ToString(), StringComparison.CurrentCultureIgnoreCase))
                 return new GZipManagerCompress(inputFile, outputfile);
@@ -20,7 +20,7 @@ namespace GZipTest
             return null;
         }
 
-        protected GZipManager(string inputFile, string outputfile)
+        protected Manager(string inputFile, string outputfile)
         {
             SourceFile = inputFile;
             ResultFile = outputfile;
@@ -40,7 +40,7 @@ namespace GZipTest
         public string ResultFile { get; private set; }
     }
 
-    public class GZipManagerCompress : GZipManager
+    public class GZipManagerCompress : Manager
     {
         public GZipManagerCompress(string inputFile, string outputfile) : base(inputFile, outputfile)
         {
@@ -49,7 +49,7 @@ namespace GZipTest
         public override string Act => Command.Compress.ToString();
     }
 
-    public class GZipManagerDecompress : GZipManager
+    public class GZipManagerDecompress : Manager
     {
         public GZipManagerDecompress(string inputFile, string outputfile) : base(inputFile, outputfile)
         {

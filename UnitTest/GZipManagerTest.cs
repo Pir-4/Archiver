@@ -45,14 +45,14 @@ namespace UnitTest
 
         private static void CompressFile(string inputFile, string gzip)
         {
-            IGZipManager zip = new GZipManagerCompress(inputFile, gzip);
+            IManager zip = new GZipManagerCompress(inputFile, gzip);
             zip.Execute();
             Assert.IsTrue(zip.Exceptions().Count == 0);
         }
 
         private static void DecompressFile(string gzip, string outputfile)
         {
-            IGZipManager zip;
+            IManager zip;
             zip = new GZipManagerDecompress(gzip, outputfile);
             zip.Execute();
             Assert.IsTrue(zip.Exceptions().Count == 0);
