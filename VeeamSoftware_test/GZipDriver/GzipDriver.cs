@@ -1,115 +1,132 @@
 ﻿using System;
 using System.CodeDom;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Text;
 using System.IO.Compression;
 using System.Runtime.Remoting.Messaging;
 using System.Threading;
-using VeeamSoftware_test.Gzip;
+using GZipTest.ThreadPool;
 
-namespace VeeamSoftware_test.GZipDriver
+namespace GZipTest.GZipDriver
 {
     public abstract class GzipDriver : IGzipDriver
     {
-        protected const int BlockSize = 10*1024*1024;
+        private bool _isComplited;
+        private int _maxCountReadedBlocks = int.MaxValue;
 
-        private readonly Thread _sourceThread;
-        private readonly Thread _outputThread;
+        protected string SourceFilePath;
+        protected string OutputFilePath;
 
-        protected int countTreadsOfObject;
-        protected IMyThreadPool _threadPool;
-        protected MyQueue<byte[]> BufferMyQueue = new MyQueue<byte[]>();
-        private List<Exception> _exceptions = new List<Exception>();
+        private readonly SyncronizedQueue<byte[]> _readQueue;
+        private readonly SyncronizedQueue<byte[]> _writeQueue;
 
-        protected string _soutceFilePath;
-        private string _outputFilePath;
-
-        protected Stream sourceStream;
-
-        private static readonly AutoResetEvent _autoResetEvent = new AutoResetEvent(false);
-
+        private readonly IMyThreadPool _threadPool;
         protected GzipDriver()
         {
-            _sourceThread = new Thread(ReadStream);
-            _outputThread = new Thread(WriteStream);
+            _readQueue = new SyncronizedQueue<byte[]>();
+            _writeQueue = new SyncronizedQueue<byte[]>();
 
-            countTreadsOfObject = 1;
-            
-
+            _threadPool = new MyThreadPool();
         }
 
         public void Execute(string inputPath, string outputPath)
         {
-            _soutceFilePath = inputPath;
-            _outputFilePath = outputPath;
+            SourceFilePath = inputPath;
+            OutputFilePath = outputPath;
 
-            _threadPool = new MyThreadPool(Environment.ProcessorCount - countTreadsOfObject);
+            _threadPool.Add(this.Read);
+            _threadPool.Add(this.Write);
 
-            _sourceThread.Start();
-            _outputThread.Start();
+            var maxThreadCount = Environment.ProcessorCount - _threadPool.Count;
+            maxThreadCount = maxThreadCount > 0 ? maxThreadCount : 1;
+            Enumerable.Range(1, maxThreadCount).ToList().ForEach(_ => _threadPool.Add(this.Process));
 
-            _autoResetEvent.WaitOne();
-
-            _sourceThread.Join();
-            _outputThread.Join();
+            _threadPool.Execute();
         }
 
-        public List<Exception> Exceptions
-        {
-            get { return _exceptions; }
-            protected set { _exceptions = value; }
-        }
+        public List<Exception> Exceptions { get; set; } = new List<Exception>();
 
-        protected abstract void ReadStream();
+        protected abstract int GetBlockLength(Stream stream);
 
-        /// <summary>
-        /// Зпись  данных в выходной файл
-        /// </summary>
-        private void WriteStream()
+        protected abstract byte[] ProcessBlcok(byte[] input);
+
+        private void Read()
         {
             try
             {
-                using (
-                    FileStream outputStream = new FileStream(_outputFilePath, FileMode.Create, FileAccess.Write,
-                        FileShare.Read, BlockSize, FileOptions.Asynchronous))
+                var id = 0;
+                using (var inputStream = File.OpenRead(SourceFilePath))
                 {
-                    while (_sourceThread.IsAlive || BufferMyQueue.Size > 0 || _threadPool.isWork)
+                    while (!_isComplited && inputStream.Position < inputStream.Length)
                     {
-                        if (isBreak)
-                            break;
+                        var blockSize = GetBlockLength(inputStream);
+                        var data = new byte[blockSize];
+                        inputStream.Read(data, 0, data.Length);
+                        _readQueue.Enqueue(data, id++);
+                    }
+                }
+                _maxCountReadedBlocks = id;
+            }
+            catch (Exception e)
+            {
+                _isComplited = true;
+                Exceptions.Add(e);
+            }
+        }
 
-                        byte[] buffer;
-                        if (BufferMyQueue.TryGetValue(out buffer))
+        private void Process()
+        {
+            try
+            {
+                while (!_isComplited)
+                {
+                    byte[] block;
+                    long id;
+                    if (_readQueue.TryGetValue(out block, out id))
+                    {
+                        var data = ProcessBlcok(block);
+                        _writeQueue.Enqueue(data, id);
+                    }
+                }
+            }
+            catch (Exception e)
+            {
+                _isComplited = true;
+                Exceptions.Add(e);
+            }
+        }
+
+        private void Write()
+        {
+            try
+            {
+                var expectedId = 0;
+                using (var outputStrem = new FileStream(OutputFilePath, FileMode.Append))
+                {
+                    while (!_isComplited && expectedId < _maxCountReadedBlocks)
+                    {
+                        byte[] block;
+                        long id;
+                        if (_writeQueue.TryGetValue(out block, out id))
                         {
-                            outputStream.Write(buffer, 0, buffer.Length);
-                            outputStream.Flush();
-                            BufferMyQueue.Release();
+                            expectedId++;
+                            outputStrem.Write(block, 0, block.Length);
+                            outputStrem.Flush(true);
                         }
                     }
                 }
             }
-            catch (Exception ex)
+            catch (Exception e)
             {
-
-                _exceptions.Add(ex);
+                Exceptions.Add(e);
             }
             finally
             {
-                _threadPool.Free();
-                sourceStream.Close();
-                _autoResetEvent.Set();
+                _isComplited = true;
             }
         }
-
-        protected bool isBreak
-        {
-            get { return Exceptions.Count != 0; }
-        }
     }
-
-    
-
-    
 }

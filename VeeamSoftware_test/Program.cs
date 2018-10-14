@@ -7,9 +7,9 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using VeeamSoftware_test.Gzip;
+using GZipTest;
 
-namespace VeeamSoftware_test
+namespace GZipTest
 {
     public class Program
     {
@@ -73,8 +73,7 @@ namespace VeeamSoftware_test
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("Please enter 3 parameters:").
                     AppendLine("- for compression: GZipTest.exe compress [source file name] [archive file name]").
-                    AppendLine(
-                        "- for decompression: GZipTest.exe decompress [archive file name] [decompressed file name]");
+                    AppendLine("- for decompression: GZipTest.exe decompress [archive file name] [decompressed file name]");
                 throw new ArgumentException(sb.ToString());
             }
             
@@ -84,10 +83,11 @@ namespace VeeamSoftware_test
             if (!Directory.Exists(Path.GetDirectoryName(argv[2])))
                 throw new ArgumentException("Please enter correct directory output file.");
 
-            IGZipManager result = GZipManager.create(argv[0], argv[1], argv[2]);
+            IGZipManager result = GZipManager.Сreate(argv[0], argv[1], argv[2]);
 
             if (result == null)
-                throw new ArgumentException(String.Format("Please use \"{0}\" and \"{1}\" commands only as the first parameter.", GZipManager.Compress, GZipManager.Decompress));
+                throw new ArgumentException(
+                    $"Please use \"{GZipManager.Compress}\" and \"{GZipManager.Decompress}\" commands only as the first parameter.");
 
 
             return result;
