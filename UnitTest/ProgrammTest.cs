@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using GZiptest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GZipTest;
 
@@ -33,12 +34,12 @@ namespace UnitTest
         [TestMethod]
         public void NotCorretSourceFileNameArgv()
         {
-            Assert.IsTrue(Program.Main(new string[] { "compress", @"E:\1.lol", "" }).Equals(1));
+            Assert.IsTrue(Program.Main(new string[] { Command.Compress.ToString(), @"E:\1.lol", "" }).Equals(1));
         }
         [TestMethod]
         public void NotCorretOutputFileNameArgv()
         {
-            Assert.IsTrue(Program.Main(new string[] { "compress", Path.Combine(_pathTotestFolder, "small.txt"), @"U:\Tgt" }).Equals(1));
+            Assert.IsTrue(Program.Main(new string[] { Command.Compress.ToString(), Path.Combine(_pathTotestFolder, "small.txt"), @"U:\Tgt" }).Equals(1));
         }
         [TestMethod]
         public void CorreteArgv()
@@ -50,9 +51,9 @@ namespace UnitTest
             IfExistDeleteFile(decompressFile);
             IfExistDeleteFile(zipFile);
 
-            Assert.IsTrue(Program.Main(new string[] { "compress", inputFile, zipFile }).Equals(0));
+            Assert.IsTrue(Program.Main(new string[] { Command.Compress.ToString(), inputFile, zipFile }).Equals(0));
 
-            Assert.IsTrue(Program.Main(new string[] { "decompress", zipFile, decompressFile }).Equals(0));
+            Assert.IsTrue(Program.Main(new string[] { Command.Compress.ToString(), zipFile, decompressFile }).Equals(0));
 
             CheckResult(inputFile, decompressFile, zipFile);
         }

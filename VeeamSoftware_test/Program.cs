@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
+using GZiptest;
 using GZipTest;
 
 namespace GZipTest
@@ -66,14 +67,15 @@ namespace GZipTest
                }
             return 0;
         }
+
         private static IGZipManager ValidateArguments(string[] argv)
         {
             if (argv == null || argv.Length != 3)
             {
                 StringBuilder sb = new StringBuilder();
                 sb.AppendLine("Please enter 3 parameters:").
-                    AppendLine("- for compression: GZipTest.exe compress [source file name] [archive file name]").
-                    AppendLine("- for decompression: GZipTest.exe decompress [archive file name] [decompressed file name]");
+                    AppendLine($"- for compression: GZipTest.exe {Command.Compress} [source file name] [archive file name]").
+                    AppendLine($"- for decompression: GZipTest.exe {Command.Decompress} [archive file name] [decompressed file name]");
                 throw new ArgumentException(sb.ToString());
             }
             
@@ -87,8 +89,7 @@ namespace GZipTest
 
             if (result == null)
                 throw new ArgumentException(
-                    $"Please use \"{GZipManager.Compress}\" and \"{GZipManager.Decompress}\" commands only as the first parameter.");
-
+                    $"Please use \"{Command.Compress}\" and \"{Command.Decompress}\" commands only as the first parameter.");
 
             return result;
 

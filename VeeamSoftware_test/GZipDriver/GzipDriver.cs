@@ -24,19 +24,20 @@ namespace GZipTest.GZipDriver
         private readonly SyncronizedQueue<byte[]> _writeQueue;
 
         private readonly IMyThreadPool _threadPool;
-        protected GzipDriver()
+
+        protected GzipDriver(string inputPath, string outputPath)
         {
+            SourceFilePath = inputPath;
+            OutputFilePath = outputPath;
+
             _readQueue = new SyncronizedQueue<byte[]>();
             _writeQueue = new SyncronizedQueue<byte[]>();
 
             _threadPool = new MyThreadPool();
         }
 
-        public void Execute(string inputPath, string outputPath)
+        public void Execute()
         {
-            SourceFilePath = inputPath;
-            OutputFilePath = outputPath;
-
             _threadPool.Add(this.Read);
             _threadPool.Add(this.Write);
 

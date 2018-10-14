@@ -10,6 +10,10 @@ namespace GZipTest.GZipDriver
 {
     public class GzipDriverDecompress : GzipDriver
     {
+        public GzipDriverDecompress(string inputPath, string outputPath) : base(inputPath, outputPath)
+        {
+        }
+
         protected override int GetBlockLength(Stream stream)
         {
             var startPosition = stream.Position;
