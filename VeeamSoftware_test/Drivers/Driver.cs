@@ -10,7 +10,7 @@ using System.Runtime.Remoting.Messaging;
 using System.Threading;
 using GZipTest.ThreadPool;
 
-namespace GZipTest.GZipDriver
+namespace GZipTest.Driver
 {
     public abstract class Driver : IDriver
     {
