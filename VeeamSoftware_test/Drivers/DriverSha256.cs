@@ -43,7 +43,7 @@ namespace GZipTest.Drivers
                 if (WriteQueue.TryGetValue(out block, out id))
                 {
                     expectedId++;
-                    var hash = BitConverter.ToString(block);
+                    var hash = BitConverter.ToString(block).Replace("-", "").ToLowerInvariant();
                     Console.WriteLine($"Hash #{id} '{hash}'");
                 }
             }
