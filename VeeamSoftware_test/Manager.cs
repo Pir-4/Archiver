@@ -19,7 +19,6 @@ namespace GZipTest
 
             if (act.Equals(Command.Sha256.ToString(), StringComparison.CurrentCultureIgnoreCase))
                 return new ManagerSha256(inputFile, blockSize);
-            
 
             return null;
         }
