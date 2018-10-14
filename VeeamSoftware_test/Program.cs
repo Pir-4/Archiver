@@ -7,9 +7,9 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using VeeamSoftware;
+using GZipTest;
 
-namespace VeeamSoftware
+namespace GZipTest
 {
     public class Program
     {

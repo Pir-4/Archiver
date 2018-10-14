@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace VeeamSoftware.ThreadPool
+namespace GZipTest.ThreadPool
 {
     public class MyThreadPool : IMyThreadPool
     {

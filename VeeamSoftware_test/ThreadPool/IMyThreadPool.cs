@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace VeeamSoftware.ThreadPool
+namespace GZipTest.ThreadPool
 {
     public interface IMyThreadPool
      {

@@ -1,6 +1,6 @@
 ﻿using System.IO;
 using NUnit.Framework;
-using ve
+using GZipTest;
 
 namespace UnitTest
 {
@@ -11,10 +11,10 @@ namespace UnitTest
         [Test]
         public void CompressFileAndDecompressToFile()
         {
-            string inputFile = @"E:\education\programs\test\testttt\dfdf.txt";
+            string inputFile = @"E:\education\programs\Veeam\test\testttt\dfdf.txt";
 
-            string outputfile = @"E:\education\programs\test22.txt";
-            string gzip = @"E:\education\programs\test.gzip";
+            string outputfile = @"E:\education\programs\Veeam\test22.txt";
+            string gzip = @"E:\education\programs\Veeam\test.gzip";
 
             IGZipManager zip = new GZipManagerCompress(inputFile, gzip);
             zip.Execute();

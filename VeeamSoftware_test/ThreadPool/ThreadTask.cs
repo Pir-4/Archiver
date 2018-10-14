@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-namespace VeeamSoftware.ThreadPool
+namespace GZipTest.ThreadPool
 {
     internal class ThreadTask
     {

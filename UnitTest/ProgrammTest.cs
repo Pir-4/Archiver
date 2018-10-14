@@ -1,7 +1,7 @@
 ﻿using System;
 using System.IO;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
-using VeeamSoftware_test;
+using GZipTest;
 
 namespace UnitTest
 {

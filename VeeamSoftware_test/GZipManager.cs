@@ -1,8 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using VeeamSoftware.GZipDriver;
+using GZipTest.GZipDriver;
 
-namespace VeeamSoftware
+namespace GZipTest
 {
     public abstract class GZipManager : IGZipManager
     {

@@ -8,9 +8,9 @@ using System.Text;
 using System.IO.Compression;
 using System.Runtime.Remoting.Messaging;
 using System.Threading;
-using VeeamSoftware.ThreadPool;
+using GZipTest.ThreadPool;
 
-namespace VeeamSoftware.GZipDriver
+namespace GZipTest.GZipDriver
 {
     public abstract class GzipDriver : IGzipDriver
     {
@@ -112,9 +112,8 @@ namespace VeeamSoftware.GZipDriver
                         long? id;
                         if (_writeQueue.TryGetValue(out block, out id))
                         {
-                            var blcok = new byte[4];
                             expectedId++;
-                            outputStrem.Write(blcok, 0, 5);
+                            outputStrem.Write(block, 0, block.Length);
                             outputStrem.Flush(true);
                         }
                     }

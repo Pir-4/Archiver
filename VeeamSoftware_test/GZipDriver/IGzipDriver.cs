@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace VeeamSoftware.GZipDriver
+namespace GZipTest.GZipDriver
 {
     public interface IGzipDriver
     {
