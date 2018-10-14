@@ -8,9 +8,7 @@ namespace GZipTest.GZipDriver
         /// <summary>
         /// Преобразование данных
         /// </summary>
-        /// <param name="inputPath">путь до входного файла</param>
-        /// <param name="outputPath">путь до выходного файла</param>
-        void Execute(string inputPath, string outputPath);
+        void Execute();
 
         /// <summary>
         /// Получение список ошибок

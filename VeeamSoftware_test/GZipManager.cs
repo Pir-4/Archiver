@@ -30,7 +30,7 @@ namespace GZipTest
         }
         public void Execute()
         {
-            Driver.Execute(SourceFile, ResultFile);
+            Driver.Execute();
         }
         public List<Exception> Exceptions()
         {
@@ -55,7 +55,7 @@ namespace GZipTest
     {
         public GZipManagerCompress(string inputFile, string outputfile) : base(inputFile, outputfile)
         {
-            Driver = new GzipDriverCompress();
+            Driver = new GzipDriverCompress(inputFile, outputfile);
         }
         public override string Act => Command.Compress.ToString();
     }
@@ -64,7 +64,7 @@ namespace GZipTest
     {
         public GZipManagerDecompress(string inputFile, string outputfile) : base(inputFile, outputfile)
         {
-            Driver = new GzipDriverDecompress();
+            Driver = new GzipDriverDecompress(inputFile, outputfile);
         }
         public override string Act => Command.Decompress.ToString();
     }

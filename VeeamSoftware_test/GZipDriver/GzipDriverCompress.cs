@@ -11,6 +11,10 @@ namespace GZipTest.GZipDriver
     {
         protected const int BlockSize = 10 * 1024 * 1024;
 
+        public GzipDriverCompress(string inputPath, string outputPath) : base(inputPath, outputPath)
+        {
+        }
+
         protected override int GetBlockLength(Stream stream)
         {
             return (int)Math.Min(BlockSize, stream.Length - stream.Position);
