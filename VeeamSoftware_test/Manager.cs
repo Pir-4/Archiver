@@ -9,13 +9,19 @@ namespace GZipTest
     {
         protected IDriver Driver;
 
-        public static IManager Factory(string act, string inputFile, string outputfile)
+        public static IManager Factory(string act, string inputFile, string outputfile, int? blockSize = null)
         {
             if (act.Equals(Command.Compress.ToString(), StringComparison.CurrentCultureIgnoreCase))
                 return new ManagerGZipCompress(inputFile, outputfile);
 
             if (act.Equals(Command.Decompress.ToString(), StringComparison.CurrentCultureIgnoreCase))
                 return new ManagerGZipDecompress(inputFile, outputfile);
+
+            if (act.Equals(Command.Sha256.ToString(), StringComparison.CurrentCultureIgnoreCase))
+            {
+                if(!blockSize.HasValue) throw new ArgumentNullException("For calculate 'Sha256' block size have value");//TODO испривать формулировку
+                return new ManagerSha256(inputFile, blockSize.Value);
+            }
 
             return null;
         }
@@ -58,4 +64,12 @@ namespace GZipTest
         public override string Act => Command.Decompress.ToString();
     }
 
+    public class ManagerSha256 : Manager
+    {
+        public ManagerSha256(string inputFile, int blockSize) : base(inputFile, "")
+        {
+            Driver = new DriverSha256(inputFile, blockSize);
+        }
+        public override string Act => Command.Sha256.ToString();
+    }
 }
