@@ -29,7 +29,7 @@ namespace GZipTest.GZipDriver
                     compressionStream.Write(input, 0, input.Length);
                 }
                 var data = memoryStream.ToArray();
-                BitConverter.GetBytes(data.Length).CopyTo(data, 4);//TODO ?
+                BitConverter.GetBytes(data.Length).CopyTo(data, 4);
                 return data;
             }
         }
