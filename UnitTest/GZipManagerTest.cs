@@ -9,7 +9,7 @@ namespace UnitTest
     [TestFixture]
     public class GZipManagerTest
     {
-        protected string _pathTotestFolder = @"E:\education\programs\Veeam\test";
+        protected const string _pathTotestFolder = @"E:\education\programs\Veeam\test";
 
         [TestCase("small.txt")]
         [TestCase("4GB.mkv")]
@@ -45,15 +45,15 @@ namespace UnitTest
 
         private static void CompressFile(string inputFile, string gzip)
         {
-            IGZipManager zip = new GZipManagerCompress(inputFile, gzip);
+            IManager zip = new ManagerGZipCompress(inputFile, gzip);
             zip.Execute();
             Assert.IsTrue(zip.Exceptions().Count == 0);
         }
 
         private static void DecompressFile(string gzip, string outputfile)
         {
-            IGZipManager zip;
-            zip = new GZipManagerDecompress(gzip, outputfile);
+            IManager zip;
+            zip = new ManagerGZipDecompress(gzip, outputfile);
             zip.Execute();
             Assert.IsTrue(zip.Exceptions().Count == 0);
         }

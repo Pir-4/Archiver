@@ -5,13 +5,13 @@ using System.IO.Compression;
 using System.Linq;
 using System.Text;
 
-namespace GZipTest.GZipDriver
+namespace GZipTest.Drivers
 {
-    public class GzipDriverCompress : GzipDriver
+    public class DriverGzipCompress : DriverGZip
     {
         protected const int BlockSize = 10 * 1024 * 1024;
 
-        public GzipDriverCompress(string inputPath, string outputPath) : base(inputPath, outputPath)
+        public DriverGzipCompress(string inputPath, string outputPath) : base(inputPath, outputPath)
         {
         }
 

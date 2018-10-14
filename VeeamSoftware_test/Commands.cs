@@ -4,11 +4,12 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace GZiptest
+namespace GZipTest
 {
     public enum Command
     {
         Compress,
-        Decompress
+        Decompress,
+        Sha256
     } 
 }

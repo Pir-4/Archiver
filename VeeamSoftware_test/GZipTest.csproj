@@ -7,13 +7,28 @@
     <ProjectGuid>{8E3C1C81-9E78-4DC4-BFE7-72BF2BE99927}</ProjectGuid>
     <OutputType>Exe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>GZiptest</RootNamespace>
+    <RootNamespace>GZipTest</RootNamespace>
     <AssemblyName>VeeamSoftware_test</AssemblyName>
     <TargetFrameworkVersion>v4.6.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     <TargetFrameworkProfile>
     </TargetFrameworkProfile>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <PlatformTarget>AnyCPU</PlatformTarget>
@@ -46,14 +61,16 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands.cs" />
-    <Compile Include="IGZipManager.cs" />
+    <Compile Include="Drivers\DriverGZip.cs" />
+    <Compile Include="Drivers\DriverSha256.cs" />
+    <Compile Include="IManager.cs" />
     <Compile Include="ThreadPool\IMyThreadPool.cs" />
     <Compile Include="ThreadPool\MyThreadPool.cs" />
-    <Compile Include="GZipDriver\GzipDriver.cs" />
-    <Compile Include="GZipDriver\GzipDriverCompress.cs" />
-    <Compile Include="GZipDriver\GzipDriverDecompress.cs" />
-    <Compile Include="GZipDriver\IGzipDriver.cs" />
-    <Compile Include="GZipManager.cs" />
+    <Compile Include="Drivers\Driver.cs" />
+    <Compile Include="Drivers\DriverGzipCompress.cs" />
+    <Compile Include="Drivers\DriverGzipDecompress.cs" />
+    <Compile Include="Drivers\IDriver.cs" />
+    <Compile Include="Manager.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="SyncronizedQueue.cs" />
@@ -61,6 +78,13 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 
-namespace GZipTest.GZipDriver
+namespace GZipTest.Drivers
 {
-    public interface IGzipDriver
+    public interface IDriver
     {
         /// <summary>
         /// Преобразование данных

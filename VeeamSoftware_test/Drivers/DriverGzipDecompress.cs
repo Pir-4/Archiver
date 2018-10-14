@@ -6,11 +6,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
-namespace GZipTest.GZipDriver
+namespace GZipTest.Drivers
 {
-    public class GzipDriverDecompress : GzipDriver
+    public class DriverGzipDecompress : DriverGZip
     {
-        public GzipDriverDecompress(string inputPath, string outputPath) : base(inputPath, outputPath)
+        public DriverGzipDecompress(string inputPath, string outputPath) : base(inputPath, outputPath)
         {
         }
 

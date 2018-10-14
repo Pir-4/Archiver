@@ -5,7 +5,7 @@ using System.Text;
 
 namespace GZipTest
 {
-    public interface IGZipManager
+    public interface IManager
     {
         void Execute();
         string Act { get; }

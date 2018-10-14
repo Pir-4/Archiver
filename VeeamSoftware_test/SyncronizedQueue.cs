@@ -6,7 +6,7 @@ using System.Threading;
 
 namespace GZipTest
 {
-    internal class SyncronizedQueue<T> where T: class 
+    public class SyncronizedQueue<T> where T: class 
     {
         private class Node
         {
