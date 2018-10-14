@@ -7,7 +7,7 @@ using System.Text;
 
 namespace GZipTest.GZipDriver
 {
-    public class DriverGzipCompress : Driver
+    public class DriverGzipCompress : DriverGZip
     {
         protected const int BlockSize = 10 * 1024 * 1024;
 

@@ -7,7 +7,6 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading;
-using GZiptest;
 using GZipTest;
 
 namespace GZipTest

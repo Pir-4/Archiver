@@ -1,6 +1,5 @@
 ﻿using System;
 using System.IO;
-using GZiptest;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using GZipTest;
 

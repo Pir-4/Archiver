@@ -14,14 +14,14 @@ namespace GZipTest.GZipDriver
 {
     public abstract class Driver : IDriver
     {
-        private bool _isComplited;
-        private int _maxCountReadedBlocks = int.MaxValue;
+        protected bool _isComplited;
+        protected int _maxCountReadedBlocks = int.MaxValue;
 
         protected string SourceFilePath;
         protected string OutputFilePath;
 
         private readonly SyncronizedQueue<byte[]> _readQueue;
-        private readonly SyncronizedQueue<byte[]> _writeQueue;
+        protected readonly SyncronizedQueue<byte[]> _writeQueue;
 
         private readonly IMyThreadPool _threadPool;
 
@@ -53,6 +53,8 @@ namespace GZipTest.GZipDriver
         protected abstract int GetBlockLength(Stream stream);
 
         protected abstract byte[] ProcessBlcok(byte[] input);
+
+        protected abstract void WriteBlock();
 
         private void Read()
         {
@@ -104,21 +106,7 @@ namespace GZipTest.GZipDriver
         {
             try
             {
-                var expectedId = 0;
-                using (var outputStrem = new FileStream(OutputFilePath, FileMode.Append))
-                {
-                    while (!_isComplited && expectedId < _maxCountReadedBlocks)
-                    {
-                        byte[] block;
-                        long id;
-                        if (_writeQueue.TryGetValue(out block, out id))
-                        {
-                            expectedId++;
-                            outputStrem.Write(block, 0, block.Length);
-                            outputStrem.Flush(true);
-                        }
-                    }
-                }
+                this.WriteBlock();
             }
             catch (Exception e)
             {

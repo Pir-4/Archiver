@@ -46,6 +46,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Commands.cs" />
+    <Compile Include="GZipDriver\DriverGZip.cs" />
     <Compile Include="IManager.cs" />
     <Compile Include="ThreadPool\IMyThreadPool.cs" />
     <Compile Include="ThreadPool\MyThreadPool.cs" />

@@ -1,6 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using GZiptest;
+using GZipTest;
 using GZipTest.GZipDriver;
 
 namespace GZipTest
