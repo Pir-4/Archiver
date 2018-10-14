@@ -9,7 +9,7 @@ namespace GZipTest
     {
         protected IDriver Driver;
 
-        public static IManager Сreate(string act, string inputFile, string outputfile)
+        public static IManager Factory(string act, string inputFile, string outputfile)
         {
             if (act.Equals(Command.Compress.ToString(), StringComparison.CurrentCultureIgnoreCase))
                 return new ManagerGZipCompress(inputFile, outputfile);

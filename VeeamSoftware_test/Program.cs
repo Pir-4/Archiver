@@ -85,7 +85,7 @@ namespace GZipTest
             if (!Directory.Exists(Path.GetDirectoryName(argv[2])))
                 throw new ArgumentException("Please enter correct directory output file.");
 
-            IManager result = Manager.Сreate(argv[0], argv[1], argv[2]);
+            IManager result = Manager.Factory(argv[0], argv[1], argv[2]);
 
             if (result == null)
                 throw new ArgumentException(
