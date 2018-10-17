@@ -18,6 +18,7 @@ namespace GZipTest
         private Node _head;
         private int _count;
         private long _expected;
+        private bool _isBreak;
 
         public SyncronizedQueue(int maxSize = 15)
         {
@@ -30,9 +31,15 @@ namespace GZipTest
         {
             lock (this)
             {
-                while (Volatile.Read(ref _count) >= MaxSize || id != Interlocked.Read(ref _expected))
+                while (!_isBreak &&
+                    (Volatile.Read(ref _count) >= MaxSize || id != Interlocked.Read(ref _expected)))
                 {
                     Monitor.Wait(this);
+                }
+
+                if (_isBreak)
+                {
+                    return;
                 }
 
                 var node = new Node {Data = data, Id = id};
@@ -60,6 +67,18 @@ namespace GZipTest
         {
             lock (this)
             {
+                while (!_isBreak && Volatile.Read(ref _count) <= 0)
+                {
+                    Monitor.Wait(this);
+                }
+
+                if (_isBreak)
+                {
+                    data = null;
+                    id = 0;
+                    return false;
+                }
+
                 var result = Volatile.Read(ref _count) > 0;
 
                 data = _head?.Data;
@@ -71,6 +90,15 @@ namespace GZipTest
                 }
                 Monitor.PulseAll(this);
                 return result;
+            }
+        }
+
+        public void Break()
+        {
+            lock (this)
+            {
+                _isBreak = true;
+                Monitor.PulseAll(this);
             }
         }
     }

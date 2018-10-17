@@ -75,7 +75,7 @@ namespace GZipTest.Drivers
             }
             catch (Exception e)
             {
-                IsComplited = true;
+                Complete();
                 Exceptions.Add(e);
             }
         }
@@ -97,7 +97,7 @@ namespace GZipTest.Drivers
             }
             catch (Exception e)
             {
-                IsComplited = true;
+                Complete();
                 Exceptions.Add(e);
             }
         }
@@ -114,8 +114,15 @@ namespace GZipTest.Drivers
             }
             finally
             {
-                IsComplited = true;
+                Complete();
             }
+        }
+
+        private void Complete()
+        {
+            _readQueue.Break();
+            WriteQueue.Break();
+            IsComplited = true;
         }
     }
 }
