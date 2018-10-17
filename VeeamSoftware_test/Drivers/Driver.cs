@@ -17,8 +17,8 @@ namespace GZipTest.Drivers
         protected bool IsComplited;
         protected int MaxCountReadedBlocks = int.MaxValue;
 
-        protected string SourceFilePath;
-        protected string OutputFilePath;
+        public string SourceFile { get; private set; }
+        public string ResultFile { get; private set; }
 
         private readonly SyncronizedQueue<byte[]> _readQueue;
         protected readonly SyncronizedQueue<byte[]> WriteQueue;
@@ -27,8 +27,8 @@ namespace GZipTest.Drivers
 
         protected Driver(string inputPath, string outputPath)
         {
-            SourceFilePath = inputPath;
-            OutputFilePath = outputPath;
+            SourceFile = inputPath;
+            ResultFile = outputPath;
 
             _readQueue = new SyncronizedQueue<byte[]>();
             WriteQueue = new SyncronizedQueue<byte[]>();
@@ -61,7 +61,7 @@ namespace GZipTest.Drivers
             try
             {
                 var id = 0;
-                using (var inputStream = File.OpenRead(SourceFilePath))
+                using (var inputStream = File.OpenRead(SourceFile))
                 {
                     while (!IsComplited && inputStream.Position < inputStream.Length)
                     {

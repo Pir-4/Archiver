@@ -17,7 +17,7 @@ namespace GZipTest.Drivers
         protected override void WriteBlock()
         {
             var expectedId = 0;
-            using (var outputStrem = new FileStream(OutputFilePath, FileMode.Append))
+            using (var outputStrem = new FileStream(ResultFile, FileMode.Append))
             {
                 while (!IsComplited && expectedId < MaxCountReadedBlocks)
                 {
