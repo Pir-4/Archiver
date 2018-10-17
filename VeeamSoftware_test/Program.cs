@@ -14,18 +14,18 @@ namespace GZipTest
 {
     public class Program
     {
-        private static readonly string _help = "Please enter 3 parameters: \n"+
+        private static readonly string Help = "Please enter 3 parameters: \n"+
             $"- for compression: GZipTest.exe {Command.Compress.ToString()} [source file name] [archive file name]"+
             $"- for decompression: GZipTest.exe {Command.Decompress.ToString()} [archive file name] [decompressed file name]"+
             $"- for calcilate hash sha256: GZipTest.exe {Command.Sha256.ToString()} [source file name] [block size]";
 
-        public delegate bool HandlerRoutine(CtrlTypes CtrlType);
+        public delegate bool HandlerRoutine(CtrlTypes ctrlType);
 
         [DllImport("Kernel32")]
-        public static extern bool SetConsoleCtrlHandler(HandlerRoutine Handler, bool Add);
+        public static extern bool SetConsoleCtrlHandler(HandlerRoutine handler, bool add);
 
-        private static readonly Mutex mutex = new Mutex(true, Assembly.GetExecutingAssembly().GetName().CodeBase);
-        private static HandlerRoutine consoleHandler;
+        private static readonly Mutex Mutex = new Mutex(true, Assembly.GetExecutingAssembly().GetName().CodeBase);
+        private static HandlerRoutine _consoleHandler;
 
         public enum CtrlTypes
         {
@@ -44,17 +44,19 @@ namespace GZipTest
         {
             try
             {
-                if (!mutex.WaitOne(TimeSpan.Zero, true))
+                if (!Mutex.WaitOne(TimeSpan.Zero, true))
                     throw new ApplicationException("Another instance already running");
 
-                consoleHandler = new HandlerRoutine(ConsoleCtrlCheck);
-                SetConsoleCtrlHandler(consoleHandler, true);
+                _consoleHandler = new HandlerRoutine(ConsoleCtrlCheck);
+                SetConsoleCtrlHandler(_consoleHandler, true);
 
                 var blocksize = ValidateArguments(argv);
                 IManager manager = GetManager(argv, blocksize);
 
                 Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion started. Input file: {1}", manager.Act, manager.SourceFile));
+
                 manager.Execute();
+
                 if (manager.Exceptions().Count != 0)
                 {
                     foreach (var ex in manager.Exceptions())
@@ -62,6 +64,7 @@ namespace GZipTest
                             "Error:\n Message: {0} \n StackTrace:\n {1}\n", ex.Message, ex.StackTrace));
                     return 1;
                 }
+
                 if (manager.Act.Equals(Command.Compress.ToString()) ||
                     manager.Act.Equals(Command.Decompress.ToString()))
                 {
@@ -82,7 +85,7 @@ namespace GZipTest
         {
             if (argv == null || argv.Length < 3)
             {
-                throw new ArgumentException(_help);
+                throw new ArgumentException(Help);
             }
 
             int blockSize = 0;
@@ -105,11 +108,16 @@ namespace GZipTest
 
         private static IManager GetManager(string[] argv, int blockSize)
         {
-            IManager result = Manager.Factory(argv[0], argv[1], argv[2], blockSize);
+            IManager result = Manager.Factory(act: argv[0], 
+                inputFile: argv[1], outputfile: argv[2], 
+                blockSize:blockSize);
 
             if (result == null)
+            {
                 throw new ArgumentException(
-                    $"Please use \"{Command.Compress.ToString()}\" or \"{Command.Decompress.ToString()}\" or \"{Command.Sha256.ToString()}\" commands only as the first parameter.");
+                    $"Please use \"{Command.Compress.ToString()}\" or \"{Command.Decompress.ToString()}\" " +
+                    $"or \"{Command.Sha256.ToString()}\" commands only as the first parameter.");
+            }
 
             return result;
         }
