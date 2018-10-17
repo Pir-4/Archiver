@@ -95,8 +95,11 @@ namespace GZipTest
 
         public void Break()
         {
-            _isBreak = true;
-            Monitor.PulseAll(this);
+            lock (this)
+            {
+                _isBreak = true;
+                Monitor.PulseAll(this);
+            }
         }
     }
 
