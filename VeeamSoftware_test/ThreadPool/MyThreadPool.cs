@@ -10,13 +10,7 @@ namespace GZipTest.ThreadPool
     {
         private readonly List<ThreadTask> _tasks = new List<ThreadTask>();
 
-        public int Count
-        {
-            get
-            {
-                return _tasks.Count;
-            }
-        }
+        public int Count => _tasks.Count;
 
         public void Add(Action action) => _tasks.Add(new ThreadTask(action));
 
