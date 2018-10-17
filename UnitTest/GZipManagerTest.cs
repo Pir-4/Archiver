@@ -11,10 +11,10 @@ namespace UnitTest
     {
         protected const string _pathTotestFolder = @"E:\education\programs\Veeam\test";
 
+        [TestCase("empty.txt")]
         [TestCase("small.txt")]
         [TestCase("4GB.mkv")]
         [TestCase("9GB.rar")]
-        [TestCase("empty.txt")]
         public void CompressFileAndDecompressToFile(string fileName)
         {
             string inputFile = Path.Combine(_pathTotestFolder, fileName);
