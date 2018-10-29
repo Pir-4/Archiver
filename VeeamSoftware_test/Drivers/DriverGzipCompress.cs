@@ -18,7 +18,7 @@ namespace GZipTest.Drivers
             return (int)Math.Min(BlockSize, stream.Length - stream.Position);
         }
 
-        protected override byte[] ProcessBlcok(byte[] input)
+        protected override byte[] ProcessBloсk(byte[] input)
         {
             using (var memoryStream = new MemoryStream())
             {

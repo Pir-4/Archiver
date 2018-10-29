@@ -24,7 +24,7 @@ namespace GZipTest.Drivers
             return blockLength;
         }
 
-        protected override byte[] ProcessBlcok(byte[] input)
+        protected override byte[] ProcessBloсk(byte[] input)
         {
             using (var sourceStream = new MemoryStream(input))
             {
