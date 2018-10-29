@@ -50,8 +50,15 @@ namespace GZipTest
                 _consoleHandler = new HandlerRoutine(ConsoleCtrlCheck);
                 SetConsoleCtrlHandler(_consoleHandler, true);
 
-                var blocksize = ValidateArguments(argv);
-                IManager manager = GetManager(argv, blocksize);
+                Command command;
+                int blockSize;
+                ValidateArguments(argv, out command, out blockSize);
+                IManager manager = GetManager(command, argv, blockSize);
+
+                if (File.Exists(argv[2]))
+                {
+                    File.Delete(argv[2]);
+                }
 
                 Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion started. Input file: {1}", manager.Act, manager.SourceFile));
 
@@ -65,8 +72,8 @@ namespace GZipTest
                     return 1;
                 }
 
-                if (manager.Act.Equals(Command.Compress.ToString()) ||
-                    manager.Act.Equals(Command.Decompress.ToString()))
+                if (command.Equals(Command.Compress) ||
+                    command.Equals(Command.Decompress))
                 {
                     Console.WriteLine(string.Format(CultureInfo.InvariantCulture, "{0}ion completed. Output file: {1}",
                         manager.Act, manager.ResultFile));
@@ -81,19 +88,25 @@ namespace GZipTest
             return 0;
         }
 
-        private static int ValidateArguments(string[] argv)
+        private static void ValidateArguments(string[] argv, out Command command, out int blockSize)
         {
             if (argv == null || argv.Length < 3)
             {
                 throw new ArgumentException(Help);
             }
 
-            int blockSize = 0;
+            if (!Enum.TryParse(argv[0], true, out command))
+            {
+                throw new ArgumentException(
+                    $"Please use '{string.Join(" or ", Enum.GetNames(typeof(Command)))}' commands only as the first parameter.");
+            }
+
+            blockSize = 0;
 
             if (!File.Exists(argv[1]))
                 throw new ArgumentException("Please enter correct source file name.");
 
-            if (!argv[0].Equals(Command.Sha256.ToString(),StringComparison.CurrentCultureIgnoreCase))
+            if (!command.Equals(Command.Sha256))
             {
                 if (!Directory.Exists(Path.GetDirectoryName(argv[2])))
                     throw new ArgumentException("Please enter correct directory output file.");
@@ -103,20 +116,17 @@ namespace GZipTest
                 if (!int.TryParse(argv[2], out blockSize))
                     throw new ArgumentException("Please enter correct block size");
             }
-            return blockSize;
         }
 
-        private static IManager GetManager(string[] argv, int blockSize)
+        private static IManager GetManager(Command command, string[] argv, int blockSize)
         {
-            IManager result = Manager.Factory(act: argv[0], 
+            IManager result = Manager.Factory(act: command, 
                 inputFile: argv[1], outputfile: argv[2], 
                 blockSize:blockSize);
 
             if (result == null)
             {
-                throw new ArgumentException(
-                    $"Please use \"{Command.Compress.ToString()}\" or \"{Command.Decompress.ToString()}\" " +
-                    $"or \"{Command.Sha256.ToString()}\" commands only as the first parameter.");
+                throw new ArgumentException(Help);
             }
 
             return result;
