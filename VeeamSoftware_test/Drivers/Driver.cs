@@ -52,7 +52,7 @@ namespace GZipTest.Drivers
 
         protected abstract int GetBlockLength(Stream stream);
 
-        protected abstract byte[] ProcessBlcok(byte[] input);
+        protected abstract byte[] ProcessBloсk(byte[] input);
 
         protected abstract void WriteBlock();
 
@@ -90,7 +90,7 @@ namespace GZipTest.Drivers
                     long id;
                     if (_readQueue.TryGetValue(out block, out id))
                     {
-                        var data = ProcessBlcok(block);
+                        var data = ProcessBloсk(block);
                         WriteQueue.Enqueue(data, id);
                     }
                 }

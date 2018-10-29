@@ -9,7 +9,7 @@ namespace GZipTest.Drivers
 {
     public abstract class DriverGZip : Driver
     {
-        public const int BlockSize = 1024 * 1024;
+        public const int BlockSize = 512 * 1024;
 
         protected DriverGZip(string inputPath, string outputPath) : base(inputPath, outputPath)
         {}
