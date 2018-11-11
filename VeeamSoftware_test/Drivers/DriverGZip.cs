@@ -27,7 +27,6 @@ namespace GZipTest.Drivers
                     {
                         expectedId++;
                         outputStrem.Write(block, 0, block.Length);
-                        outputStrem.Flush(true);
                     }
                 }
             }
