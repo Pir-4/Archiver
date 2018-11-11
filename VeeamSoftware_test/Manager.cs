@@ -9,18 +9,19 @@ namespace GZipTest
     {
         protected IDriver Driver;
 
-        public static IManager Factory(string act, string inputFile, string outputfile, int blockSize = 0)
+        public static IManager Factory(Command act, string inputFile, string outputfile, int blockSize = 0)
         {
-            if (act.Equals(Command.Compress.ToString(), StringComparison.CurrentCultureIgnoreCase))
-                return new Manager( new DriverGzipCompress(inputFile, outputfile), Command.Compress);
-
-            if (act.Equals(Command.Decompress.ToString(), StringComparison.CurrentCultureIgnoreCase))
-                return new Manager(new DriverGzipDecompress(inputFile, outputfile), Command.Decompress);
-
-            if (act.Equals(Command.Sha256.ToString(), StringComparison.CurrentCultureIgnoreCase))
-                return new Manager(new DriverSha256(inputFile, blockSize), Command.Sha256);
-
-            return null;
+            switch (act)
+            {
+                    case Command.Compress:
+                        return new Manager(new DriverGzipCompress(inputFile, outputfile), act);
+                    case Command.Decompress:
+                        return new Manager(new DriverGzipDecompress(inputFile, outputfile), act);
+                    case Command.Sha256:
+                        return new Manager(new DriverSha256(inputFile, blockSize), act);
+                default:
+                    return null;
+            }
         }
 
         protected Manager(IDriver driver, Command command)

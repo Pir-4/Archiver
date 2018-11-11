@@ -120,9 +120,9 @@ namespace GZipTest.Drivers
 
         private void Complete()
         {
+            IsComplited = true;
             _readQueue.Break();
             WriteQueue.Break();
-            IsComplited = true;
         }
     }
 }
