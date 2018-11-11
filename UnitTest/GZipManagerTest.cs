@@ -36,7 +36,7 @@ namespace UnitTest
             FileInfo input = new FileInfo(inputFile);
             FileInfo output = new FileInfo(outputfile);
 
-            Assert.IsTrue(input.Length.Equals(output.Length));
+            //Assert.IsTrue(input.Length.Equals(output.Length));
             Assert.IsTrue(GetMd5OfFile(inputFile).Equals(GetMd5OfFile(outputfile)));
 
             File.Delete(outputfile);
