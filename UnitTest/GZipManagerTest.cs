@@ -36,8 +36,11 @@ namespace UnitTest
             FileInfo input = new FileInfo(inputFile);
             FileInfo output = new FileInfo(outputfile);
 
-            Assert.IsTrue(input.Length.Equals(output.Length));
-            Assert.IsTrue(GetMd5OfFile(inputFile).Equals(GetMd5OfFile(outputfile)));
+            Assert.IsTrue(input.Length.Equals(output.Length),$"Length input {input.Length}, output {output.Length}");
+            var inputHash = GetMd5OfFile(inputFile);
+            var outputHash = GetMd5OfFile(outputfile);
+
+            Assert.IsTrue(inputHash.Equals(outputHash), $"MD5 input '{inputHash}', output '{outputHash}'");
 
             File.Delete(outputfile);
             File.Delete(gzip);
