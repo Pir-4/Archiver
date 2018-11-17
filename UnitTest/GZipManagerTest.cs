@@ -7,17 +7,15 @@ using GZipTest;
 namespace UnitTest
 {
     [TestFixture]
-    public class GZipManagerTest
+    public class GZipManagerTest : TestBase
     {
-        protected const string _pathTotestFolder = @"E:\education\programs\Veeam\test";
-
         [TestCase("empty.txt")]
         [TestCase("small.txt")]
         [TestCase("4GB.mkv")]
         [TestCase("9GB.rar")]
         public void CompressFileAndDecompressToFile(string fileName)
         {
-            string inputFile = Path.Combine(_pathTotestFolder, fileName);
+            string inputFile = Path.Combine(PathTotestFolder, fileName);
 
             string outputfile = inputFile+"_output";
             string gzip = inputFile + "_gz";
@@ -31,51 +29,20 @@ namespace UnitTest
             CheckResult(inputFile, outputfile, gzip);
         }
 
-        protected static void CheckResult(string inputFile, string outputfile, string gzip)
-        {
-            FileInfo input = new FileInfo(inputFile);
-            FileInfo output = new FileInfo(outputfile);
-
-            Assert.IsTrue(input.Length.Equals(output.Length),$"Length input {input.Length}, output {output.Length}");
-            var inputHash = GetMd5OfFile(inputFile);
-            var outputHash = GetMd5OfFile(outputfile);
-
-            Assert.IsTrue(inputHash.Equals(outputHash), $"MD5 input '{inputHash}', output '{outputHash}'");
-
-            File.Delete(outputfile);
-            File.Delete(gzip);
-        }
-
-        private static void CompressFile(string inputFile, string gzip)
+        private void CompressFile(string inputFile, string gzip)
         {
             IManager zip = Manager.Factory(Command.Compress, inputFile, gzip);
             zip.Execute();
             Assert.IsTrue(zip.Exceptions().Count == 0);
         }
 
-        private static void DecompressFile(string gzip, string outputfile)
+        private void DecompressFile(string gzip, string outputfile)
         {
             IManager zip = Manager.Factory(Command.Decompress, gzip, outputfile);
             zip.Execute();
             Assert.IsTrue(zip.Exceptions().Count == 0);
         }
 
-        protected static void IfExistDeleteFile(string filePath)
-        {
-            if (File.Exists(filePath))
-            {
-                File.Delete(filePath);
-            }
-        }
-
-        protected static string GetMd5OfFile(string filePath)
-        {
-            using (var md5 = MD5.Create())
-            using (var stream = File.OpenRead(filePath))
-            {
-                var hash = md5.ComputeHash(stream);
-                return BitConverter.ToString(hash).Replace("-", "").ToLowerInvariant();
-            }
-        }
+        
     }
 }

@@ -6,7 +6,7 @@ using GZipTest;
 namespace UnitTest
 {
     [TestFixture]
-    public class ProgrammTest : GZipManagerTest
+    public class ProgrammTest : TestBase
     {
         [TestCase(null)]
         public void NullArgv(string[] argv)
@@ -34,13 +34,13 @@ namespace UnitTest
         [TestCase("Sha256", @"U:\Tgt")]
         public void NotCorretSecondArgv(string command, string argv2)
         {
-            Assert.IsTrue(Program.Main(new string[] { command, Path.Combine(_pathTotestFolder, "small.txt"), argv2}).Equals(1));
+            Assert.IsTrue(Program.Main(new string[] { command, Path.Combine(PathTotestFolder, "small.txt"), argv2}).Equals(1));
         }
 
         [Test]
         public void CorreteArgvToArchive()
         {
-            string inputFile = Path.Combine(_pathTotestFolder, "small.txt");
+            string inputFile = Path.Combine(PathTotestFolder, "small.txt");
             string zipFile = inputFile + "_gz";
             string decompressFile = inputFile +"_output";
 
@@ -58,7 +58,7 @@ namespace UnitTest
         [TestCase(1024)]
         public void CorreteArgvToSha256(int blockSize)
         {
-            string inputFile = Path.Combine(_pathTotestFolder, "small.txt");
+            string inputFile = Path.Combine(PathTotestFolder, "small.txt");
             Assert.IsTrue(Program.Main(new string[] { Command.Sha256.ToString(), inputFile, blockSize.ToString() }).Equals(0));
         }
     }
