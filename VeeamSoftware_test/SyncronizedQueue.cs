@@ -19,6 +19,7 @@ namespace GZipTest
         private int _count;
         private long _expected;
         private bool _isBreak;
+        private readonly object _locker = new object();
 
         public SyncronizedQueue(int maxSize = 15)
         {
@@ -29,12 +30,12 @@ namespace GZipTest
 
         public void Enqueue(T data, long id)
         {
-            lock (this)
+            lock (_locker)
             {
                 while (!_isBreak &&
-                    (Volatile.Read(ref _count) >= MaxSize || id != Interlocked.Read(ref _expected)))
+                    (Volatile.Read(ref _count) >= MaxSize || id != Volatile.Read(ref _expected)))
                 {
-                    Monitor.Wait(this);
+                    Monitor.Wait(_locker);
                 }
 
                 if (_isBreak)
@@ -59,17 +60,17 @@ namespace GZipTest
 
                 Interlocked.Increment(ref _count);
                 Interlocked.Increment(ref _expected);
-                Monitor.PulseAll(this);
+                Monitor.PulseAll(_locker);
             }
         }
 
         public bool TryGetValue(out T data, out long id)
         {
-            lock (this)
+            lock (_locker)
             {
                 while (!_isBreak && Volatile.Read(ref _count) <= 0)
                 {
-                    Monitor.Wait(this);
+                    Monitor.Wait(_locker);
                 }
 
                 if (_isBreak)
@@ -88,17 +89,17 @@ namespace GZipTest
                     _head = _head?.Next;
                     Interlocked.Decrement(ref _count);
                 }
-                Monitor.PulseAll(this);
+                Monitor.PulseAll(_locker);
                 return result;
             }
         }
 
         public void Break()
         {
-            lock (this)
+            lock (_locker)
             {
                 _isBreak = true;
-                Monitor.PulseAll(this);
+                Monitor.PulseAll(_locker);
             }
         }
     }
