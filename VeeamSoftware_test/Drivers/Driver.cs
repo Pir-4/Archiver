@@ -41,8 +41,6 @@ namespace GZipTest.Drivers
             _threadPool.Add(this.Read);
             _threadPool.Add(this.Write);
 
-            /*var maxThreadCount = Environment.ProcessorCount - _threadPool.Count;
-            maxThreadCount = maxThreadCount > 0 ? maxThreadCount : 1;*/
             Enumerable.Range(1, Environment.ProcessorCount).ToList().ForEach(_ => _threadPool.Add(this.Process));
 
             _threadPool.Execute();

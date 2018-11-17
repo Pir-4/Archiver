@@ -29,7 +29,6 @@ namespace GZipTest.Drivers
                         outputStrem.Write(block, 0, block.Length);
                     }
                 }
-                outputStrem.Flush(true);
             }
         }
     }
