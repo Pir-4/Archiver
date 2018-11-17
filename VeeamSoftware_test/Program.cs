@@ -53,7 +53,7 @@ namespace GZipTest
                 Command command;
                 int blockSize;
                 ValidateArguments(argv, out command, out blockSize);
-                IManager manager = GetManager(command, argv, blockSize);
+                var manager = GetManager(command, argv, blockSize);
 
                 if (File.Exists(argv[2]))
                 {
