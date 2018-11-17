@@ -102,5 +102,4 @@ namespace GZipTest
             }
         }
     }
-
 }

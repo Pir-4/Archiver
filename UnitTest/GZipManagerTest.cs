@@ -55,8 +55,7 @@ namespace UnitTest
 
         private static void DecompressFile(string gzip, string outputfile)
         {
-            IManager zip;
-            zip = Manager.Factory(Command.Compress, gzip, outputfile);
+            IManager zip = Manager.Factory(Command.Decompress, gzip, outputfile);
             zip.Execute();
             Assert.IsTrue(zip.Exceptions().Count == 0);
         }
